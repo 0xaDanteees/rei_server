@@ -2,13 +2,13 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-app.get("/")
+@app.get("/")
 def read_root():
     return {
         "Payload": "deployed, horny, uwu, meow"
     }
 
-app.get("/api/health")
+@app.get("/api/health")
 def health_check():
     return {"status": "ok"}
 
