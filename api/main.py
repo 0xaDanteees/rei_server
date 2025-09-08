@@ -11,8 +11,7 @@ app = FastAPI(
     openapi_url="/openapi.json",
     swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}})
 
-# Serve static assets from the api/ folder (e.g., /api/waifu_sol_internal.jpg)
-app.mount("/api", StaticFiles(directory=Path(__file__).parent), name="api-static")
+# Note: Do NOT mount StaticFiles at "/api" or it will overshadow dynamic routes like /api/health on Vercel.
 
 # Serve global assets (e.g., /assets/img/miku.png)
 assets_dir = (Path(__file__).resolve().parent.parent / "assets").resolve()
