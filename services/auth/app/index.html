@@ -63,6 +63,9 @@
     a { color: var(--link); text-decoration: none; }
     a:hover { color: var(--link-hover); text-decoration: underline; }
     code { background: rgba(255,255,255,0.08); padding: .1rem .35rem; border-radius: 4px; }
+    footer { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+    .footer-meta { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .bullet { opacity:.5; }
     
     @media (max-width: 768px) {
       .main-container {
@@ -88,6 +91,18 @@
       <section class="hero-content">
         <h1>Auth Service</h1>
         <p class="desc">Authentication and account flows (MVP).</p>
+        <p style="margin-top:.5rem">
+          <a id="gateway-link" href="/" style="color:#60a5fa; text-decoration:none;">← Back to API Gateway</a>
+        </p>
+        <script>
+          (function() {
+            const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+            if (isLocal) {
+              const link = document.getElementById('gateway-link');
+              if (link) link.setAttribute('href', 'http://localhost:8100/');
+            }
+          })();
+        </script>
       </section>
 
       <section class="grid">
@@ -143,7 +158,17 @@
         </div>
       </section>
       <footer>
-        <p>@V0.2.1</p>
+        <div class="footer-meta">
+          <span>Waifu Solutions</span>
+          <span class="bullet">•</span>
+          <span>Auth Service</span>
+          <span class="bullet">•</span>
+          <span>@V0.2.2</span>
+          <span class="bullet">•</span>
+          <span>Built with FastAPI</span>
+          <span class="bullet">•</span>
+          <span>Contributors: <a href="https://github.com/0xaDanteees" target="_blank" rel="noopener noreferrer"><strong>0xaDanteees</strong></a></span>
+        </div>
       </footer>
     </div>
   </div>

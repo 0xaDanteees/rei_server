@@ -56,6 +56,8 @@
     code { background: rgba(255,255,255,0.08); padding: 0.125rem 0.375rem; border-radius: 4px; }
 
     footer { margin-top: 2rem; color: var(--muted); font-size: 0.9rem; }
+    .footer-meta { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .bullet { opacity:.5; }
   </style>
 </head>
 <body>
@@ -112,7 +114,17 @@
     </section>
 
     <footer>
-      <p>@V0.3.1</p>
+      <div class="footer-meta" style="text-align:center;justify-content:center;align-items:center;">
+        <span>Waifu Solutions</span>
+        <span class="bullet">•</span>
+        <span>API Gateway</span>
+        <span class="bullet">•</span>
+        <span>@V0.3.2</span>
+        <span class="bullet">•</span>
+        <span>Built with FastAPI</span>
+        <span class="bullet">•</span>
+        <span>Contributors: <a href="https://github.com/0xaDanteees" target="_blank" rel="noopener noreferrer"><strong>0xaDanteees</strong></a></span>
+      </div>
     </footer>
   </div>
 </body>
