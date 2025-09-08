@@ -182,6 +182,31 @@ Shared DB notes:
 - Partners references `auth.users` via FK. The Partners Alembic env includes a metadata-only shim for `users(id)` so FK resolution works during autogenerate, while filters prevent emitting any DDL for `users`.
 - Always run `make auth-up` first on a fresh DB so `users` exists before Partners adds FKs.
 
+## Ops: stop Docker and microservices
+
+Quick utility makefile to shut down the local stack and any uvicorn processes.
+
+File: `Makefile.ops`
+
+Usage (run from repo root):
+```
+# Stop everything: kill uvicorn (auth:8200, partners:8300) and docker compose down
+make -f Makefile.ops all-down
+
+# Only stop Docker Compose
+make -f Makefile.ops docker-down
+
+# Only kill running services
+make -f Makefile.ops kill-svcs
+
+# Kill individually
+make -f Makefile.ops kill-auth
+make -f Makefile.ops kill-partners
+
+# Diagnostics (ports/processes)
+make -f Makefile.ops ps
+```
+
 ## Best Practices
 - **Keep routers small** and focused by domain.
 - **Add global exception handlers** early to standardize error envelopes.
