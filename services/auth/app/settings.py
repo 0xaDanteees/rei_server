@@ -37,8 +37,12 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Build DSN if not explicitly provided
+# Build DSN if not explicitly provided AND all components exist
 if not settings.POSTGRES_DSN:
-    settings.POSTGRES_DSN = (
-        f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-    )
+    if all([settings.DB_USER, settings.DB_PASSWORD, settings.DB_HOST, settings.DB_PORT, settings.DB_NAME]):
+        settings.POSTGRES_DSN = (
+            f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+        )
+    else:
+        # leave as None to allow stateless mode (no DB on Vercel)
+        settings.POSTGRES_DSN = None

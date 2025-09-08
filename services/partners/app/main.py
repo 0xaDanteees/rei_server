@@ -7,7 +7,8 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from fastapi.responses import HTMLResponse
 
-from ..db import init_db, close_db
+from sqlalchemy import text
+from ..db import init_db, close_db, is_db_enabled, get_engine
 from ..settings import settings
 from .routers.partner import router as partner_router
 from .routers.clothing import router as clothing_router
@@ -90,7 +91,16 @@ async def shutdown():
 
 @app.get("/partners/health")
 async def health():
-    return {"status": "ok"}
+    db_status = "down"
+    if is_db_enabled():
+        try:
+            engine = get_engine()
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            db_status = "up"
+        except Exception:
+            db_status = "down"
+    return {"status": "ok", "db": db_status}
 
 # Serve a simple landing page for Partners at both "/" (local) and "/partners" (Vercel)
 def _read_partners_index() -> str:

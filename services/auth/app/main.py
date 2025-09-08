@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from fastapi.responses import HTMLResponse
 
-from .db import init_db, close_db
+from .db import init_db, close_db, is_db_enabled, get_engine
 from .settings import settings
 from .routers.auth import router as auth_router
 from .routers.user import router as user_router
@@ -88,7 +88,16 @@ async def shutdown():
 
 @app.get("/auth/health")
 async def health():
-    return {"status": "ok"}
+    db_status = "down"
+    if is_db_enabled():
+        try:
+            engine = get_engine()
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            db_status = "up"
+        except Exception:
+            db_status = "down"
+    return {"status": "ok", "db": db_status}
 
 
 # Serve a simple landing page for Auth at both "/" (local) and "/auth" (Vercel)
