@@ -153,17 +153,34 @@ Auth Service: https://reicam-server.vercel.app/auth/docs
 ```
 
 
-# Database and migrations
+# Database and Migrations (per-service on a shared DB)
 
-- Generate migrations folder:
+This repo runs Alembic per microservice, even when multiple services share the same Postgres database. Each service has:
+
+- Its own Alembic config and versions directory (e.g., `services/auth/migrations/`, `services/partners/migrations/`).
+- Its own Alembic version table to avoid conflicts (e.g., `alembic_version_auth`, `alembic_version_partners`).
+- An Alembic environment that filters autogenerate to only include that service’s tables.
+
+Use the provided Makefile targets to generate/apply revisions. From repo root:
+
 ```
-alembic -c services/<service_name>/app/alembic.ini init migrations
+# Partners
+make partners-rev m="describe change"   # create a new revision from models
+make partners-up                         # upgrade to head
+make partners-down                       # downgrade one step
+make partners-stamp                      # mark current schema as head without changes
+
+# Auth
+make auth-rev m="describe change"
+make auth-up
+make auth-down
+make auth-stamp
 ```
 
-- Run migrations:
-```
-alembic -c services/<service_name>/app/alembic.ini upgrade head
-```
+Shared DB notes:
+- Set identical DB env vars (or POSTGRES_DSN) for all services so they point to the same database.
+- Partners references `auth.users` via FK. The Partners Alembic env includes a metadata-only shim for `users(id)` so FK resolution works during autogenerate, while filters prevent emitting any DDL for `users`.
+- Always run `make auth-up` first on a fresh DB so `users` exists before Partners adds FKs.
 
 ## Best Practices
 - **Keep routers small** and focused by domain.

@@ -38,6 +38,19 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
+def include_object(object, name, type_, reflected, compare_to):
+    """Limit autogenerate to tables/indexes from this service's metadata."""
+    if type_ == "table":
+        return name in target_metadata.tables
+    if type_ == "index":
+        try:
+            tbl = object.table.name  # type: ignore[attr-defined]
+        except Exception:
+            tbl = None
+        return tbl in target_metadata.tables
+    return True
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -50,6 +63,8 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
+        version_table="alembic_version_auth",
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -61,6 +76,8 @@ def do_run_migrations(connection: Connection) -> None:
         connection=connection,
         target_metadata=target_metadata,
         compare_type=True,
+        version_table="alembic_version_auth",
+        include_object=include_object,
     )
 
     with context.begin_transaction():

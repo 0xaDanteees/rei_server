@@ -7,6 +7,10 @@
         {
             "src": "services/auth/app/main.py",
             "use": "@vercel/python"
+        },
+        {
+            "src": "services/partners/app/main.py",
+            "use": "@vercel/python"
         }
     ],
     "routes": [
@@ -17,6 +21,14 @@
         {
             "src": "/auth/(.*)",
             "dest": "/services/auth/app/main.py"
+        },
+        {
+            "src": "/partners",
+            "dest": "/services/partners/app/main.py"
+        },
+        {
+            "src": "/partners/(.*)",
+            "dest": "/services/partners/app/main.py"
         },
         {
             "src": "/(.*)",

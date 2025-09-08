@@ -16,11 +16,11 @@ class Settings(BaseSettings):
 
     # Database (prefer POSTGRES_DSN, else compose from DB_* env vars)
     POSTGRES_DSN: Optional[str] = None
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = "postgres"
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_NAME: str = "auth"
+    DB_USER: str = os.getenv("DB_USER")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD")
+    DB_HOST: str = os.getenv("DB_HOST")
+    DB_PORT: int = os.getenv("DB_PORT")
+    DB_NAME: str = os.getenv("DB_NAME")
 
     # CORS
     CORS_ORIGINS: List[str] = ["*"]

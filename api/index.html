@@ -113,6 +113,37 @@
       </div>
     </section>
 
+    <section class="grid">
+      <div class="card">
+        <h2>Partners Service</h2>
+        <p class="muted">Partner profiles, traits and customization (MVP).</p>
+        <ul>
+          <li><a data-svc="partners-docs" href="/partners/docs">Swagger UI</a></li>
+          <li><a data-svc="partners-openapi" href="/partners/openapi.json">OpenAPI JSON</a></li>
+          <li><a data-svc="partners-health" href="/partners/health">Health</a> <code>GET /partners/health</code></li>
+          <li><a data-svc="partners" href="/partners">Partners Service</a> <code>Partners Service</code></li>
+        </ul>
+        <script>
+          (function() {
+            const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+            if (isLocal) {
+              const base = "http://localhost:8300"; // local partners service
+              const map = {
+                "partners-docs": base + "/partners/docs",
+                "partners-openapi": base + "/partners/openapi.json",
+                "partners-health": base + "/partners/health",
+                "partners": base + "/partners",
+              };
+              document.querySelectorAll('[data-svc]').forEach(a => {
+                const key = a.getAttribute('data-svc');
+                if (map[key]) a.setAttribute('href', map[key]);
+              });
+            }
+          })();
+        </script>
+      </div>
+    </section>
+
     <footer>
       <div class="footer-meta" style="text-align:center;justify-content:center;align-items:center;">
         <span>Waifu Solutions</span>
