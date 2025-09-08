@@ -1,0 +1,19 @@
+services:
+  postgres-auth:
+    container_name: postgres-auth
+    image: postgres:16
+    ports:
+      - "${DB_PORT:-5434}:5432"
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local

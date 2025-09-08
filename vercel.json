@@ -3,9 +3,17 @@
         {
             "src": "api/main.py",
             "use": "@vercel/python"
+        },
+        {
+            "src": "services/auth/app/main.py",
+            "use": "@vercel/python"
         }
     ],
     "routes": [
+        {
+            "src": "/auth/(.*)",
+            "dest": "/services/auth/app/main.py"
+        },
         {
             "src": "/(.*)",
             "dest": "/api/main.py"
