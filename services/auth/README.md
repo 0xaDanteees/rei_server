@@ -113,9 +113,22 @@ alembic -c services/auth/alembic.ini upgrade head
 ```
 uvicorn services.auth.app.main:app --reload --port 8200
 ```
-- Open Swagger UI:
+- Visit landing page and Swagger UI:
 ```
-http://127.0.0.1:8200/docs
+Landing: http://127.0.0.1:8200/ (also at http://127.0.0.1:8200/auth)
+Swagger: http://127.0.0.1:8200/auth/docs
+OpenAPI: http://127.0.0.1:8200/auth/openapi.json
+Health:  http://127.0.0.1:8200/auth/health
+```
+
+## Production (Vercel)
+
+- Deployed routes (assuming reicam-server.vercel.app):
+```
+Landing: https://reicam-server.vercel.app/auth
+Swagger: https://reicam-server.vercel.app/auth/docs
+OpenAPI: https://reicam-server.vercel.app/auth/openapi.json
+Health:  https://reicam-server.vercel.app/auth/health
 ```
 
 ## Testing

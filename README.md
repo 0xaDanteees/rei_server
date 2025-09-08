@@ -128,11 +128,30 @@ uvicorn api.main:app --reload --port 8000
 ```
 uvicorn services.auth.app.main:app --reload --port 8200
 ```
-- Visit Swagger UIs:
+- Visit landing pages (local):
 ```
-http://127.0.0.1:8000/docs
-http://127.0.0.1:8200/docs
+API Gateway: http://127.0.0.1:8000/
+Auth Service: http://127.0.0.1:8200/  (also at http://127.0.0.1:8200/auth)
 ```
+
+- Swagger UIs (local):
+```
+API Gateway: http://127.0.0.1:8000/docs
+Auth Service: http://127.0.0.1:8200/auth/docs
+```
+
+- Visit landing pages (production):
+```
+API Gateway: https://reicam-server.vercel.app/
+Auth Service: https://reicam-server.vercel.app/auth
+```
+
+- Swagger UIs (production):
+```
+API Gateway: https://reicam-server.vercel.app/docs
+Auth Service: https://reicam-server.vercel.app/auth/docs
+```
+
 
 # Database and migrations
 
