@@ -16,11 +16,12 @@ class Settings(BaseSettings):
 
     # Database (prefer POSTGRES_DSN, else compose from DB_* env vars)
     POSTGRES_DSN: Optional[str] = None
-    DB_USER: str = os.getenv("DB_USER")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD")
-    DB_HOST: str = os.getenv("DB_HOST")
-    DB_PORT: int = os.getenv("DB_PORT")
-    DB_NAME: str = os.getenv("DB_NAME")
+    # Optional so vercel doesnt break
+    DB_USER: Optional[str] = os.getenv("DB_USER")
+    DB_PASSWORD: Optional[str] = os.getenv("DB_PASSWORD")
+    DB_HOST: Optional[str] = os.getenv("DB_HOST")
+    DB_PORT: Optional[int] = int(os.getenv("DB_PORT")) if os.getenv("DB_PORT") else None
+    DB_NAME: Optional[str] = os.getenv("DB_NAME")
 
     # CORS
     CORS_ORIGINS: List[str] = ["*"]
