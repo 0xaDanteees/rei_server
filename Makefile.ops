@@ -2,7 +2,7 @@
 # Usage examples:
 #   make -f Makefile.ops all-down      # stop docker compose and kill all uvicorn services
 #   make -f Makefile.ops docker-down   # only docker compose down
-#   make -f Makefile.ops kill-svcs     # only kill uvicorn services (auth, partners)
+#   make -f Makefile.ops kill-svcs     # only kill uvicorn services (api, auth, partners)
 #   make -f Makefile.ops ps            # show relevant processes/ports
 
 SHELL := /bin/bash
@@ -14,6 +14,13 @@ docker-down:
 
 # -------- Services (uvicorn) --------
 # Try graceful kill by name, then by port as fallback
+kill-api:
+	@echo "[ops] killing API gateway (by name + port 8000)"
+	@pkill -f "uvicorn .*api\.main:app" || true
+	@lsof -ti:8000 | xargs -I{} kill {} 2>/dev/null || true
+	@sleep 0.3
+	@lsof -ti:8000 | xargs -I{} kill -9 {} 2>/dev/null || true
+
 kill-auth:
 	@echo "[ops] killing Auth service (by name + port 8200)"
 	@pkill -f "uvicorn .*services\.auth\.app\.main:app" || true
@@ -28,7 +35,7 @@ kill-partners:
 	@sleep 0.3
 	@lsof -ti:8300 | xargs -I{} kill -9 {} 2>/dev/null || true
 
-kill-svcs: kill-auth kill-partners
+kill-svcs: kill-api kill-auth kill-partners
 	@echo "[ops] services killed"
 
 # -------- All-in-one --------
@@ -37,5 +44,8 @@ all-down: kill-svcs docker-down
 
 # -------- Diagnostics --------
 ps:
-	@echo "[ops] Listening on 8200/8300 (if any):" && (lsof -iTCP:8200 -sTCP:LISTEN || true) && (lsof -iTCP:8300 -sTCP:LISTEN || true)
-	@echo "[ops] uvicorn processes:" && (ps aux | grep -E "uvicorn .*app\.main:app" | grep -v grep || true)
+	@echo "[ops] Listening on 8000/8200/8300 (if any):" \
+	  && (lsof -iTCP:8000 -sTCP:LISTEN || true) \
+	  && (lsof -iTCP:8200 -sTCP:LISTEN || true) \
+	  && (lsof -iTCP:8300 -sTCP:LISTEN || true)
+	@echo "[ops] uvicorn processes:" && (ps aux | grep -E "uvicorn .*main:app" | grep -v grep || true)
