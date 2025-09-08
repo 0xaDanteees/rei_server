@@ -9,8 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..security import get_current_user, AuthUser
-from ...db import get_db
-from ...models import (
+from ..db import get_db
+from ..models import (
     ClothingItem,
     ClothingItemResponse,
     ClothingItemCreate,

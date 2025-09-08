@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from ..security import get_current_user, AuthUser
-from ...db import get_db
-from ...models import (
+from ..db import get_db
+from ..models import (
     Partner,
     PartnerPiercing,
     PartnerPiercingBase,

@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..security import get_current_user, AuthUser
-from ...db import get_db
-from ...models import (
+from ..db import get_db
+from ..models import (
     PARTNER_PRESETS,
     Partner,
     PartnerBase,

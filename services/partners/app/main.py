@@ -8,8 +8,8 @@ from starlette.requests import Request
 from fastapi.responses import HTMLResponse
 
 from sqlalchemy import text
-from ..db import init_db, close_db, is_db_enabled, get_engine
-from ..settings import settings
+from .db import init_db, close_db, is_db_enabled, get_engine
+from .settings import settings
 from .routers.partner import router as partner_router
 from .routers.clothing import router as clothing_router
 from .routers.accesories import router as accesories_router
