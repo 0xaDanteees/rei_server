@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
+import httpx
 
 app = FastAPI(
     title="API Gateway",
@@ -28,8 +29,50 @@ def read_root():
         return "<html><body><h1>Waifu Solutions Backend</h1><p>Landing page unavailable.</p></body></html>"
 
 @app.get("/api/health")
-def health_check():
-    return {"status": "ok"}
+async def health_check(request: Request):
+    base = str(request.base_url).rstrip("/")
+    results = {
+        "api": {"status": "ok"},
+        "auth": {"status": "down"},
+        "partners": {"status": "down"},
+    }
+
+    async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
+        # Try same-deployment relative URLs first (Vercel)
+        endpoints = {
+            "auth": f"{base}/auth/health",
+            "partners": f"{base}/partners/health",
+        }
+
+        for svc, url in endpoints.items():
+            try:
+                r = await client.get(url)
+                if r.status_code == 200:
+                    data = r.json()
+                    results[svc] = {"status": "ok", **({"db": data.get("db")} if isinstance(data, dict) else {})}
+                else:
+                    results[svc] = {"status": "down", "code": r.status_code}
+            except Exception as e:
+                # Local dev fallback to ports if host is localhost/127.0.0.1
+                host = request.client.host if request.client else "127.0.0.1"
+                if host in ("127.0.0.1", "localhost"):
+                    fallback = {
+                        "auth": "http://127.0.0.1:8200/auth/health",
+                        "partners": "http://127.0.0.1:8300/partners/health",
+                    }
+                    try:
+                        r2 = await client.get(fallback[svc])
+                        if r2.status_code == 200:
+                            data2 = r2.json()
+                            results[svc] = {"status": "ok", **({"db": data2.get("db")} if isinstance(data2, dict) else {})}
+                        else:
+                            results[svc] = {"status": "down", "code": r2.status_code}
+                    except Exception as e2:
+                        results[svc] = {"status": "down", "error": str(e2)}
+                else:
+                    results[svc] = {"status": "down", "error": str(e)}
+
+    return results
 
 
 if __name__ == "__main__":
