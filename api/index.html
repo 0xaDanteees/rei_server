@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Waifu Solutions API Gateway</title>
+  <link rel="icon" type="image/jpg" href="/assets/img/waifu_sol_internal.jpg" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #11172a;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --link: #60a5fa;
+      --link-hover: #93c5fd;
+      --accent: #22d3ee;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(34,211,238,0.12), transparent 50%),
+                  radial-gradient(1000px 600px at 120% 10%, rgba(99,102,241,0.12), transparent 50%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .container {
+      max-width: 920px; margin: 0 auto; padding: 2rem 1.25rem 3rem;
+    }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand {
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+    }
+    .hero-img { width: 340px; height: 340px; border-radius: 18px; object-fit: cover; }
+    h1 { font-size: 2.6rem; margin: 0; letter-spacing: 0.2px; font-weight: 800; }
+    .desc { margin: 0.5rem 0 0; color: var(--muted); font-size: 1.15rem; }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1.25rem;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 1rem 1rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+      transition: transform .15s ease, border-color .2s ease;
+    }
+    .card:hover { transform: translateY(-2px); border-color: rgba(34,211,238,0.35); }
+    .card h2 { margin: 0 0 0.25rem; font-size: 1.15rem; }
+    .card .muted { color: var(--muted); margin: 0 0 0.75rem; font-size: 0.95rem; }
+    .card ul { list-style: none; padding-left: 0; margin: 0.25rem 0 0; }
+    .card li { margin: 0.45rem 0; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { color: var(--link-hover); text-decoration: underline; }
+    code { background: rgba(255,255,255,0.08); padding: 0.125rem 0.375rem; border-radius: 4px; }
+
+    footer { margin-top: 2rem; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand" style="align-items:center;">
+        <img class="hero-img" src="/assets/img/miku.png" alt="Waifu Solutions" />
+        <div>
+          <h1>Waifu Solutions Backend</h1>
+          <p class="desc">Landing page with quick links to microservices.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <h2>API Gateway</h2>
+        <p class="muted">Top-level service used for quick checks and routing.</p>
+        <ul>
+          <li><a href="/docs">Swagger UI</a></li>
+          <li><a href="/openapi.json">OpenAPI JSON</a></li>
+          <li><a href="/api/health">Health</a> <code>GET /api/health</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Auth Service</h2>
+        <p class="muted">Authentication and account flows (MVP).</p>
+        <ul>
+          <li><a data-svc="auth-docs" href="/auth/docs">Swagger UI</a></li>
+          <li><a data-svc="auth-openapi" href="/auth/openapi.json">OpenAPI JSON</a></li>
+          <li><a data-svc="auth-health" href="/auth/health">Health</a> <code>GET /auth/health</code></li>
+          <li><a data-svc="auth" href="/">Auth Service</a> <code>Auth Service</code></li>
+        </ul>
+        <script>
+          (function() {
+            const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+            if (isLocal) {
+              const authBase = "http://localhost:8200"; // local auth service
+              const map = {
+                "auth-docs": authBase + "/auth/docs",
+                "auth-openapi": authBase + "/auth/openapi.json",
+                "auth-health": authBase + "/auth/health",
+                "auth": authBase + "/",
+              };
+              document.querySelectorAll('[data-svc]').forEach(a => {
+                const key = a.getAttribute('data-svc');
+                if (map[key]) a.setAttribute('href', map[key]);
+              });
+            }
+          })();
+        </script>
+      </div>
+    </section>
+
+    <footer>
+      <p>Version: 0.2.0 — Built with FastAPI on Vercel.</p>
+    </footer>
+  </div>
+</body>
+</html>

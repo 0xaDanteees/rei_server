@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auth Service • Waifu Solutions</title>
+  <link rel="icon" type="image/jpg" href="/api/waifu_sol_internal.jpg" />
+  <style>
+    :root {
+      --bg: #0b1020; --card: #11172a; --text: #e5e7eb; --muted: #9ca3af; --link: #60a5fa; --link-hover: #93c5fd;
+    }
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(34,211,238,0.12), transparent 50%),
+                  radial-gradient(1000px 600px at 120% 10%, rgba(99,102,241,0.12), transparent 50%), var(--bg);
+      color: var(--text); 
+      height: 100vh;
+      overflow: hidden;
+    }
+    .main-container {
+      display: flex;
+      height: 100vh;
+    }
+    .image-section {
+      width: 33.333333%; /* w-1/3 */
+      height: 100vh;
+      overflow: hidden;
+    }
+    .hero-img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+    }
+    .content-section {
+      width: 66.666667%; /* w-2/3 */
+      height: 100vh;
+      overflow-y: auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    .hero-content {
+      margin-bottom: 1.5rem;
+    }
+    h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: .2px; }
+    p.desc { margin: .35rem 0 0; color: var(--muted); }
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
+      gap: 1rem; 
+      margin-top: 1rem; 
+    }
+    .card { 
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); 
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; 
+      padding: 1rem; 
+    }
+    .card h2 { margin: 0 0 .35rem; font-size: 1.1rem; }
+    .card .muted { color: var(--muted); margin: 0 0 .75rem; font-size: .95rem; }
+    ul { list-style: none; margin: .25rem 0 0; padding: 0; }
+    li { margin: .4rem 0; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { color: var(--link-hover); text-decoration: underline; }
+    code { background: rgba(255,255,255,0.08); padding: .1rem .35rem; border-radius: 4px; }
+    
+    /* Media queries para responsive */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .image-section {
+        width: 100%;
+        height: 40vh;
+      }
+      .content-section {
+        width: 100%;
+        height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Sección de imagen - 1/3 de la pantalla -->
+    <div class="image-section">
+      <img class="hero-img" src="/assets/img/auth-waifu.jpg" alt="Auth Service" />
+    </div>
+    
+    <!-- Sección de contenido - 2/3 de la pantalla -->
+    <div class="content-section">
+      <section class="hero-content">
+        <h1>Auth Service</h1>
+        <p class="desc">Authentication and account flows (MVP).</p>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h2>Documentation</h2>
+          <p class="muted">Explore and test the API interactively.</p>
+          <ul>
+            <li><a href="/auth/docs">Swagger UI</a></li>
+            <li><a href="/auth/openapi.json">OpenAPI JSON</a></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Health</h2>
+          <p class="muted">Basic service status.</p>
+          <ul>
+            <li style="color: var(--link)"><code>GET</code> <a href="/auth/health">/auth/health</a></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Auth Router</h2>
+          <p class="muted">Core authentication flows.</p>
+          <ul>
+            <li style="color: var(--link)"><code>POST</code> /auth/register</li>
+            <li style="color: var(--link)"><code>POST</code> /auth/login</li>
+            <li style="color: var(--link)"><code>POST</code> /auth/logout</li>
+            <li style="color: var(--link)"><code>POST</code> /auth/forgot-password</li>
+            <li style="color: var(--link)"><code>POST</code> /auth/reset-password</li>
+            <li style="color: var(--link)"><code>POST</code> /auth/change-password</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>User Router</h2>
+          <p class="muted">User profile and avatar endpoints.</p>
+          <ul>
+            <li style="color: var(--link)"><code>GET</code> /user/me</li>
+            <li style="color: var(--link)"><code>POST</code> /user/avatar (multipart)</li>
+            <li style="color: var(--link)"><code>GET</code> /user/avatar</li>
+            <li style="color: var(--link)"><code>DELETE</code> /user/avatar</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Account Router</h2>
+          <p class="muted">Account lifecycle actions.</p>
+          <ul>
+            <li style="color: var(--link)"><code>POST</code> /account/deactivate</li>
+            <li style="color: var(--link)"><code>POST</code> /account/reactivate</li>
+            <li style="color: var(--link)"><code>DELETE</code> /account/nuke</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
