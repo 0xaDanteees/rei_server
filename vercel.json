@@ -11,6 +11,10 @@
     ],
     "routes": [
         {
+            "src": "/auth",
+            "dest": "/services/auth/app/main.py"
+        },
+        {
             "src": "/auth/(.*)",
             "dest": "/services/auth/app/main.py"
         },
