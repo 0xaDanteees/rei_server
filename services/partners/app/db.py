@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy import text
+from sqlalchemy import text, Table
 from fastapi import HTTPException, status
 from .settings import settings
 
@@ -50,6 +50,16 @@ async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.execute(text("SELECT 1"))
         try:
+            # Reflect external 'users' table into our metadata to satisfy FK references
+            def _reflect_users(sync_conn):
+                try:
+                    Table("users", Base.metadata, autoload_with=sync_conn)
+                except Exception:
+                    # If reflection fails (table missing), continue; FK ops will fail accordingly
+                    pass
+
+            await conn.run_sync(_reflect_users)
+
             # Import models lazily to avoid cycles
             from . import models  # noqa: F401
             await conn.run_sync(Base.metadata.create_all)

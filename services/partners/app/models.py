@@ -2,9 +2,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List
 from uuid import UUID, uuid4
+import random
 
 from pydantic import BaseModel, Field, validator
-from sqlalchemy import Column, String, DateTime, Boolean, Float, Integer, Text, ForeignKey, Index, func, text, Table
+from sqlalchemy import Column, String, DateTime, Boolean, Float, Integer, Text, ForeignKey, Index, func, text, Table, event
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -290,6 +291,86 @@ class PiercingLocation(str, Enum):
     TONGUE = "tongue"
     NAVEL = "navel"
 
+class PersonalityTraits(str, Enum):
+    # personality traits
+    CURIOUS = "curious"
+    SHY = "shy"
+    EXTRAVAGANT = "extravagant"
+    INDEPENDENT = "independent"
+    INTROVERTED = "introverted"
+    EXTROVERTED = "extroverted"
+    JUDGEMENTAL = "judgemental"
+    JOKING = "joking"
+    KEREN = "keren"
+    KINKY = "kinky"
+    LONELY = "lonely"
+    LUSTFUL = "lustful"
+    MATURE = "mature"
+    NAUGHTY = "naughty"
+    NERVOUS = "nervous"
+    NICE = "nice"
+    NERD = "nerd"
+    KIND = "kind"
+    CRAZY = "crazy"
+    CONFIDENT = "confident"
+    PROGRESSIVE = "progressive"
+    TRADITIONAL = "traditional"
+    SUBMISSIVE = "submissive"
+    DOMINANT = "dominant"
+    SADISTIC = "sadistic"
+    DISTANT = "distant"
+    TSUNDE = "tsundere"
+    
+
+
+class PersonalityRarity(str, Enum):
+    COMMON = "common"
+    UNCOMMON = "uncommon"
+    RARE = "rare"
+    EPIC = "epic"
+    LEGENDARY = "legendary"
+
+# Rarity mapping for each personality trait
+# Adjust these as needed for game balance
+PERSONALITY_TRAIT_RARITY = {
+    PersonalityTraits.CURIOUS: PersonalityRarity.COMMON,
+    PersonalityTraits.SHY: PersonalityRarity.COMMON,
+    PersonalityTraits.EXTRAVAGANT: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.INDEPENDENT: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.INTROVERTED: PersonalityRarity.COMMON,
+    PersonalityTraits.EXTROVERTED: PersonalityRarity.COMMON,
+    PersonalityTraits.JUDGEMENTAL: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.JOKING: PersonalityRarity.COMMON,
+    PersonalityTraits.KEREN: PersonalityRarity.RARE,
+    PersonalityTraits.KINKY: PersonalityRarity.RARE,
+    PersonalityTraits.LONELY: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.LUSTFUL: PersonalityRarity.RARE,
+    PersonalityTraits.MATURE: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.NAUGHTY: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.NERVOUS: PersonalityRarity.COMMON,
+    PersonalityTraits.NICE: PersonalityRarity.COMMON,
+    PersonalityTraits.NERD: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.KIND: PersonalityRarity.COMMON,
+    PersonalityTraits.CRAZY: PersonalityRarity.RARE,
+    PersonalityTraits.CONFIDENT: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.PROGRESSIVE: PersonalityRarity.RARE,
+    PersonalityTraits.TRADITIONAL: PersonalityRarity.LEGENDARY,
+    PersonalityTraits.SUBMISSIVE: PersonalityRarity.RARE,
+    PersonalityTraits.DOMINANT: PersonalityRarity.EPIC,
+    PersonalityTraits.SADISTIC: PersonalityRarity.LEGENDARY,
+    PersonalityTraits.DISTANT: PersonalityRarity.UNCOMMON,
+    PersonalityTraits.TSUNDE: PersonalityRarity.LEGENDARY,
+}
+
+# Helper weights for random selection, by rarity
+RARITY_WEIGHTS = {
+    PersonalityRarity.LEGENDARY: 1,
+    PersonalityRarity.EPIC: 2,
+    PersonalityRarity.RARE: 4,
+    PersonalityRarity.UNCOMMON: 8,
+    PersonalityRarity.COMMON: 16,
+}
+
 # >w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨
 #                       SQLALCHEMY MODELS
 # >w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨
@@ -379,7 +460,13 @@ class Partner(Base):
     beard_position = Column(String(50), nullable=False, default=BeardPosition.NONE)
     moustache_position = Column(String(50), nullable=False, default=MoustachePosition.NONE)
     eyebrow_position = Column(String(50), nullable=False, default=EyeBrowPosition.NORMAL)
-    
+    # Store as JSONB array of objects: [{"trait": "curious", "rarity": "common"}, ...]
+    personality_core = Column(
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb")
+    )
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -452,9 +539,50 @@ class PartnerTattoo(Base):
 
     partner = relationship("Partner", back_populates="tattoos")
 
+# ==================== EVENTS / GENERATION LOGIC ====================
+
+def _generate_personality_core() -> List[dict]:
+    """Generate 4 unique personality traits based on rarity weights."""
+    all_traits = list(PersonalityTraits)
+    # Build weighted pool
+    weighted_pool = []
+    for trait in all_traits:
+        rarity = PERSONALITY_TRAIT_RARITY[trait]
+        weight = RARITY_WEIGHTS[rarity]
+        weighted_pool.extend([trait] * weight)
+
+    selected: List[PersonalityTraits] = []
+    # Ensure uniqueness by sampling without replacement using the weighted pool
+    # We do up to a reasonable number of attempts to avoid rare infinite loops
+    attempts = 0
+    while len(selected) < 4 and attempts < 1000:
+        attempts += 1
+        choice = random.choice(weighted_pool)
+        if choice not in selected:
+            selected.append(choice)
+
+    # Fallback: if not enough due to edge cases, fill from remaining traits
+    if len(selected) < 4:
+        remaining = [t for t in all_traits if t not in selected]
+        selected.extend(random.sample(remaining, 4 - len(selected)))
+
+    return [{"trait": t.value, "rarity": PERSONALITY_TRAIT_RARITY[t].value} for t in selected]
+
+
+@event.listens_for(Partner, "before_insert")
+def set_default_personality_core(mapper, connection, target: "Partner"):
+    """Automatically set 4 unique personality traits on new partner if empty."""
+    # Only set if personality_core is empty or None to allow manual override
+    if not target.personality_core:
+        target.personality_core = _generate_personality_core()
+
 # >w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨
 #                       PYDANTIC SCHEMAS
 # >w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨>w<¨
+
+class PersonalityCoreItemIn(BaseModel):
+    trait: PersonalityTraits
+    rarity: PersonalityRarity
 
 class PartnerBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=128)
@@ -464,6 +592,8 @@ class PartnerBase(BaseModel):
     body_type: BodyType = BodyType.AVERAGE
     height: int = Field(default=170, ge=120, le=266)  # in cm
     fitness_level: FitnessLevel = FitnessLevel.AVERAGE
+    # Personality core is optional on input; if omitted, it's auto-generated in before_insert
+    personality_core: List[PersonalityCoreItemIn] = []
     
     # Face
     face_shape: FaceShape = FaceShape.OVAL
@@ -718,6 +848,10 @@ class PartnerTattooResponse(PartnerTattooBase):
     class Config:
         from_attributes = True
 
+class PersonalityCoreItem(BaseModel):
+    trait: PersonalityTraits
+    rarity: PersonalityRarity
+
 class PartnerResponse(PartnerBase):
     id: UUID
     user_id: UUID
@@ -726,6 +860,7 @@ class PartnerResponse(PartnerBase):
     clothing_items: List[PartnerClothingResponse] = []
     piercings: List[PartnerPiercingResponse] = []
     tattoos: List[PartnerTattooResponse] = []
+    personality_core: List[PersonalityCoreItem] = []
     
     class Config:
         from_attributes = True

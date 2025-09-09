@@ -13,7 +13,10 @@ from ..models import (
     Partner,
     PartnerBase,
     PartnerResponse,
+    PartnerClothing,
 )
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 router = APIRouter()
 
@@ -36,13 +39,28 @@ async def apply_preset(
     user: AuthUser = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
-    preset = PARTNER_PRESETS.get(preset_key)
-    if not preset:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Preset not found")
-    data: PartnerBase = preset.partner_data
-    obj = Partner(**data.model_dump())
-    obj.user_id = user.user_id
-    session.add(obj)
-    await session.commit()
-    await session.refresh(obj)
-    return obj
+    try:
+        preset = PARTNER_PRESETS.get(preset_key)
+        if not preset:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Preset not found")
+        data: PartnerBase = preset.partner_data
+        obj = Partner(**data.model_dump())
+        obj.user_id = user.user_id
+        session.add(obj)
+        await session.commit()
+        # Eagerly load relationships before returning
+        stmt = (
+            select(Partner)
+            .where(Partner.id == obj.id, Partner.user_id == user.user_id)
+            .options(
+                selectinload(Partner.clothing_items).selectinload(PartnerClothing.clothing_item),
+                selectinload(Partner.piercings),
+                selectinload(Partner.tattoos),
+            )
+        )
+        result = await session.execute(stmt)
+        obj_loaded = result.scalar_one()
+        return obj_loaded
+    except Exception:
+        await session.rollback()
+        raise

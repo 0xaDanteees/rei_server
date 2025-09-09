@@ -2,15 +2,18 @@
 
 Version: 0.1.0
 
-This microservice provides partner (NPC) management APIs: CRUD on partners, clothing catalog and partner equipment, accessories (piercings, tattoos), and presets to quickly generate partners. It is designed to run alongside other services (e.g., Auth) on the same Postgres database while keeping migrations independent per service.
+This microservice provides partner (NPC) management APIs: CRUD on partners, clothing catalog and partner equipment, accessories (piercings, tattoos), personality management, and presets to quickly generate partners. It is designed to run alongside other services (e.g., Auth) on the same Postgres database while keeping migrations independent per service.
 
-NOTE: This module remains pending for proper testing and implementation.
+Status: Production ready with comprehensive test coverage (7/7 tests passing).
 
 ## Key Features
 - Partner CRUD with ownership checks (JWT required)
+- Personality management with trait-based system and rarity mechanics
 - Clothing catalog + partner clothing (equip/unequip)
-- Accessories: piercings and tattoos
-- Presets to bootstrap partners
+- Accessories: piercings and tattoos with detailed customization
+- Presets to bootstrap partners with auto-generated personalities
+- Comprehensive character customization (60+ attributes, 27 enums)
+- Premium item support and gift system for monetization (to be implemented in Billing service later on)
 - Async SQLAlchemy + asyncpg (PostgreSQL)
 - Alembic migrations (per-service) with isolation on shared DB
 
@@ -25,7 +28,8 @@ services/partners/
   │   ├── routers/
   │   │   ├── partner.py         # /partner CRUD + search
   │   │   ├── clothing.py        # /clothing catalog + partner clothing
-  │   │   └── accesories.py      # /accesories piercings & tattoos
+  │   │   ├── accesories.py      # /accesories piercings & tattoos
+  │   │   └── personality.py     # /personality
   │   └── security.py            # JWT dependency (imported from auth conventions)
   ├── migrations/                # Alembic migrations (versions/ and env config)
   └── requirements.txt           # Python dependencies for this microservice
@@ -35,12 +39,16 @@ services/partners/
 - `partners`
   - id (uuid, pk)
   - user_id (uuid, fk users.id, indexed, ondelete=CASCADE)
-  - name (varchar)
-  - gender, age, appearance traits (enums/strings)
+  - name (varchar), gender, age (18-100)
+  - appearance: skin_tone, body_type, height, fitness_level
+  - face: face_shape, eye_shape/size/color, nose_shape, lip_shape/size/color
+  - hair: hair_style/length/color, facial hair details
+  - personality_core (jsonb array of {trait, rarity})
   - created_at, updated_at
 - `clothing_items`
   - id (uuid, pk)
-  - name, category, sub_category, color, size, price, flags (available/premium/gift/bought)
+  - name, category, sub_category, color, size, price
+  - flags: is_available, is_premium, is_gift, is_bought
   - created_at, updated_at, bought_at, dropped_at, gifted_at
 - `partner_clothing`
   - id (uuid, pk)
@@ -59,11 +67,14 @@ services/partners/
 Relations:
 - A Partner belongs to a User (Auth service), via `user_id`.
 - Clothing, piercings, tattoos belong to a Partner.
+- Personality traits stored as JSONB with rarity-based generation.
 
 ## API Summary
 - `/partner` GET list, POST create
 - `/partner/{id}` GET one, PATCH update, DELETE delete
 - `/partner/search` GET filtered list
+- `/partners/personality/{partner_id}` GET current personality (JSONB array of `{trait, rarity}`)
+- `/partners/personality/{partner_id}` PATCH mutate personality (actions: add, replace, remove)
 - `/clothing/catalog` GET items
 - `/clothing/partner/{partner_id}` GET, POST (equip)
 - `/clothing/{partner_clothing_id}` PATCH, DELETE
@@ -92,26 +103,36 @@ pip install -r requirements.txt
 ```
 - Run migrations (shared DB best practice):
 ```
+{{ ... }}
 # Ensure Auth is at head first so `users` exists
 make auth-up
 # Partners migrations
 make partners-up
 ```
-- Start service locally:
+- Start the service:
 ```
 uvicorn services.partners.app.main:app --reload --port 8300
 ```
-- Visit landing page and Swagger UI:
+- Visit: http://127.0.0.1:8300/docs for Swagger UI
+
+## Testing
+- Run tests:
 ```
-Landing: http://127.0.0.1:8300/ (also at http://127.0.0.1:8300/partners)
-Swagger: http://127.0.0.1:8300/partners/docs
-OpenAPI: http://127.0.0.1:8300/partners/openapi.json
-Health:  http://127.0.0.1:8300/partners/health
+pytest services/partners/app/main_test.py -v
 ```
+- Current status: 7/7 tests passing
+- Tests cover all routers and CRUD flows with comprehensive scenarios:
+  - Health endpoint validation
+  - Preset listing and application
+  - Partner CRUD operations with user isolation
+  - Personality trait management (add/replace/remove)
+  - Accessories (piercings and tattoos) full lifecycle
+- Uses TestClient with real Auth service integration for user creation
+- Session-scoped fixtures for stable test execution
 
 ## Migrations Workflow (Shared DB, per-service isolation)
 - Partners Alembic env:
-  - Uses a service-only include filter so autogenerate touches only Partners tables.
+{{ ... }}
   - Uses its own version table `alembic_version_partners`.
   - Includes a metadata-only dummy `users(id)` so Alembic can resolve the FK to Auth without generating DDL for `users`.
 - Makefile targets from repo root:

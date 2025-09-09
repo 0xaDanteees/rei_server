@@ -10,7 +10,11 @@ Version: 0.1.0
 ├── api/
 │   └── main.py                  # Entry point for deployment status quick check
 ├── services/
-│   └── auth/                    # Auth microservice (see services/auth/README.md)
+│   ├── auth/                    # Auth microservice (see services/auth/README.md)
+│   │   ├── app/                 # Application code
+│   │   ├── migrations/          # Database migrations
+│   │   └── requirements.txt     # Service-specific dependencies
+│   └── partners/                # Partners microservice (see services/partners/README.md)
 │       ├── app/                 # Application code
 │       ├── migrations/          # Database migrations
 │       └── requirements.txt     # Service-specific dependencies
@@ -128,28 +132,36 @@ uvicorn api.main:app --reload --port 8000
 ```
 uvicorn services.auth.app.main:app --reload --port 8200
 ```
+- Start a microservice (e.g., partners):
+```
+uvicorn services.partners.app.main:app --reload --port 8300
+```
 - Visit landing pages (local):
 ```
 API Gateway: http://127.0.0.1:8000/
 Auth Service: http://127.0.0.1:8200/  (also at http://127.0.0.1:8200/auth)
+Partners Service: http://127.0.0.1:8300/  (also at http://127.0.0.1:8300/partners)
 ```
 
 - Swagger UIs (local):
 ```
 API Gateway: http://127.0.0.1:8000/docs
 Auth Service: http://127.0.0.1:8200/auth/docs
+Partners Service: http://127.0.0.1:8300/partners/docs
 ```
 
 - Visit landing pages (production):
 ```
 API Gateway: https://reicam-server.vercel.app/
 Auth Service: https://reicam-server.vercel.app/auth
+Partners Service: https://reicam-server.vercel.app/partners
 ```
 
 - Swagger UIs (production):
 ```
 API Gateway: https://reicam-server.vercel.app/docs
 Auth Service: https://reicam-server.vercel.app/auth/docs
+Partners Service: https://reicam-server.vercel.app/partners/docs
 ```
 
 

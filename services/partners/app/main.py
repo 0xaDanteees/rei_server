@@ -14,6 +14,7 @@ from .routers.partner import router as partner_router
 from .routers.clothing import router as clothing_router
 from .routers.accesories import router as accesories_router
 from .routers.presets import router as presets_router
+from .routers.personality import router as personality_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 
@@ -49,6 +50,7 @@ app.include_router(partner_router, prefix="/partner", tags=["partner"])
 app.include_router(clothing_router, prefix="/clothing", tags=["clothing"])
 app.include_router(accesories_router, prefix="/accesories", tags=["accesories"])
 app.include_router(presets_router, prefix="/presets", tags=["presets"])
+app.include_router(personality_router, prefix="/partners/personality", tags=["personality"])
 
 # Global error handlers to enforce {status, message, payload}
 @app.exception_handler(HTTPException)
