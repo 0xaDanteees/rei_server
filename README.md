@@ -14,7 +14,11 @@ Version: 0.1.0
 │   │   ├── app/                 # Application code
 │   │   ├── migrations/          # Database migrations
 │   │   └── requirements.txt     # Service-specific dependencies
-│   └── partners/                # Partners microservice (see services/partners/README.md)
+│   ├── partners/                # Partners microservice (see services/partners/README.md)
+│   │   ├── app/                 # Application code
+│   │   ├── migrations/          # Database migrations
+│   │   └── requirements.txt     # Service-specific dependencies
+│   └── inventory/               # Inventory microservice (see services/inventory/README.md)
 │       ├── app/                 # Application code
 │       ├── migrations/          # Database migrations
 │       └── requirements.txt     # Service-specific dependencies
@@ -136,11 +140,16 @@ uvicorn services.auth.app.main:app --reload --port 8200
 ```
 uvicorn services.partners.app.main:app --reload --port 8300
 ```
+- Start inventory service:
+```
+uvicorn services.inventory.app.main:app --reload --port 8400
+```
 - Visit landing pages (local):
 ```
 API Gateway: http://127.0.0.1:8000/
 Auth Service: http://127.0.0.1:8200/  (also at http://127.0.0.1:8200/auth)
 Partners Service: http://127.0.0.1:8300/  (also at http://127.0.0.1:8300/partners)
+Inventory Service: http://127.0.0.1:8400/  (also at http://127.0.0.1:8400/inventory)
 ```
 
 - Swagger UIs (local):
@@ -148,6 +157,7 @@ Partners Service: http://127.0.0.1:8300/  (also at http://127.0.0.1:8300/partner
 API Gateway: http://127.0.0.1:8000/docs
 Auth Service: http://127.0.0.1:8200/auth/docs
 Partners Service: http://127.0.0.1:8300/partners/docs
+Inventory Service: http://127.0.0.1:8400/inventory/docs
 ```
 
 - Visit landing pages (production):
@@ -162,6 +172,22 @@ Partners Service: https://reicam-server.vercel.app/partners
 API Gateway: https://reicam-server.vercel.app/docs
 Auth Service: https://reicam-server.vercel.app/auth/docs
 Partners Service: https://reicam-server.vercel.app/partners/docs
+```
+
+
+## Testing
+
+We use `pytest` for all services. From the repo root:
+
+```
+# Run all tests across the monorepo
+python -m pytest -v services/<service_name>/app/main_test.py
+
+# Run only the Inventory service tests
+python -m pytest services/<service_name>/app/main_test.py -v
+
+# Run a single test (example)
+python -m pytest services/<service_name>/app/main_test.py::test_bundle_management_flow -v
 ```
 
 

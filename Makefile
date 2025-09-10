@@ -38,3 +38,16 @@ auth-down:
 
 auth-stamp:
 	$(PY) alembic -c services/auth/alembic.ini stamp head
+
+# Inventory
+inventory-rev:
+	$(PY) alembic -c services/inventory/alembic.ini revision --autogenerate -m "$(m)"
+
+inventory-up:
+	$(PY) alembic -c services/inventory/alembic.ini upgrade head
+
+inventory-down:
+	$(PY) alembic -c services/inventory/alembic.ini downgrade -1
+
+inventory-stamp:
+	$(PY) alembic -c services/inventory/alembic.ini stamp head

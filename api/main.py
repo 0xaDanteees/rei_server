@@ -35,6 +35,7 @@ async def health_check(request: Request):
         "api": {"status": "ok"},
         "auth": {"status": "down"},
         "partners": {"status": "down"},
+        "inventory": {"status": "down"},
     }
 
     async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
@@ -42,6 +43,7 @@ async def health_check(request: Request):
         endpoints = {
             "auth": f"{base}/auth/health",
             "partners": f"{base}/partners/health",
+            "inventory": f"{base}/inventory/health",
         }
 
         for svc, url in endpoints.items():
@@ -59,6 +61,7 @@ async def health_check(request: Request):
                     fallback = {
                         "auth": "http://127.0.0.1:8200/auth/health",
                         "partners": "http://127.0.0.1:8300/partners/health",
+                        "inventory": "http://127.0.0.1:8400/inventory/health",
                     }
                     try:
                         r2 = await client.get(fallback[svc])

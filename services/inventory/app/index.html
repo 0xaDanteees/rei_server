@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Partners Service • Waifu Solutions</title>
+  <link rel="icon" type="image/jpg" href="/assets/img/waifu_sol_internal.jpg" />
+  <style>
+    :root {
+      --bg: #0b1020; --card: #11172a; --text: #e5e7eb; --muted: #9ca3af; --link: #60a5fa; --link-hover: #93c5fd;
+    }
+    * { box-sizing: border-box; }
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(34,211,238,0.12), transparent 50%),
+                  radial-gradient(1000px 600px at 120% 10%, rgba(99,102,241,0.12), transparent 50%), var(--bg);
+      color: var(--text); 
+      height: 100vh;
+      overflow: hidden;
+    }
+    .main-container {
+      display: flex;
+      height: 100vh;
+    }
+    .image-section {
+      width: 33.333333%; /* w-1/3 */
+      height: 100vh;
+      overflow: hidden;
+    }
+    .hero-img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+    }
+    .content-section {
+      width: 66.666667%; /* w-2/3 */
+      height: 100vh;
+      overflow-y: auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    .hero-content {
+      margin-bottom: 1.5rem;
+    }
+    h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: .2px; }
+    p.desc { margin: .35rem 0 0; color: var(--muted); }
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
+      gap: 1rem; 
+      margin-top: 1rem; 
+    }
+    .card { 
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); 
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; 
+      padding: 1rem; 
+    }
+    .card h2 { margin: 0 0 .35rem; font-size: 1.1rem; }
+    .card .muted { color: var(--muted); margin: 0 0 .75rem; font-size: .95rem; }
+    ul { list-style: none; margin: .25rem 0 0; padding: 0; }
+    li { margin: .4rem 0; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { color: var(--link-hover); text-decoration: underline; }
+    code { background: rgba(255,255,255,0.08); padding: .1rem .35rem; border-radius: 4px; }
+    footer { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+    .footer-meta { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .bullet { opacity:.5; }
+    
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .image-section {
+        width: 100%;
+        height: 40vh;
+      }
+      .content-section {
+        width: 100%;
+        height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="image-section">
+      <img class="hero-img" src="/assets/img/inventory-waifu.jpg" alt="Inventory Service" />
+    </div>
+    <div class="content-section">
+      <section class="hero-content">
+        <h1>Inventory Service</h1>
+        <p class="desc">Inventory management and account flows (MVP).</p>
+        <p style="margin-top:.5rem">
+          <a id="gateway-link" href="/" style="color:#60a5fa; text-decoration:none;">← Back to API Gateway</a>
+        </p>
+        <script>
+          (function() {
+            const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+            if (isLocal) {
+              const link = document.getElementById('gateway-link');
+              if (link) link.setAttribute('href', 'http://localhost:8100/');
+            }
+          })();
+        </script>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h2>Documentation</h2>
+          <p class="muted">Explore and test the API interactively.</p>
+          <ul>
+            <li><a href="/inventory/docs">Swagger UI</a></li>
+            <li><a href="/inventory/openapi.json">OpenAPI JSON</a></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Health</h2>
+          <p class="muted">Basic service status.</p>
+          <ul>
+            <li style="color: var(--link)"><code>GET</code> <a href="/inventory/health">/inventory/health</a></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Products Router</h2>
+          <p class="muted">Product catalog management (requires JWT).</p>
+          <ul>
+            <li><code>GET</code> /api/products</li>
+            <li><code>POST</code> /api/products</li>
+            <li><code>GET</code> /api/products/{id}</li>
+            <li><code>PATCH</code> /api/products/{id}</li>
+            <li><code>DELETE</code> /api/products/{id}</li>
+            <li><code>GET</code> /api/products/categories/list</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Inventory Router</h2>
+          <p class="muted">User inventory management.</p>
+          <ul>
+            <li><code>GET</code> /api/inventory</li>
+            <li><code>GET</code> /api/inventory/{id}</li>
+            <li><code>POST</code> /api/inventory</li>
+            <li><code>PATCH</code> /api/inventory/{id}</li>
+            <li><code>DELETE</code> /api/inventory/{id}</li>
+            <li><code>POST</code> /api/inventory/grant/{user_id}/{product_id}</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Bundles Router</h2>
+          <p class="muted">Product bundle management.</p>
+          <ul>
+            <li><code>GET</code> /api/bundles</li>
+            <li><code>GET</code> /api/bundles/{id}</li>
+            <li><code>POST</code> /api/bundles</li>
+            <li><code>PATCH</code> /api/bundles/{id}</li>
+            <li><code>DELETE</code> /api/bundles/{id}</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2>Purchases Router</h2>
+          <p class="muted">Purchase history and transactions.</p>
+          <ul>
+            <li><code>GET</code> /api/purchases</li>
+            <li><code>GET</code> /api/purchases/{id}</li>
+            <li><code>POST</code> /api/purchases/product/{product_id}</li>
+            <li><code>POST</code> /api/purchases/bundle/{bundle_id}</li>
+            <li><code>POST</code> /api/purchases/{id}/refund</li>
+          </ul>
+        </div>
+      </section>
+      <footer>
+        <div class="footer-meta">
+          <span>Waifu Solutions</span>
+          <span class="bullet">•</span>
+          <span>Inventory Service</span>
+          <span class="bullet">•</span>
+          <span>@V0.1.0</span>
+          <span class="bullet">•</span>
+          <span>Built with FastAPI</span>
+          <span class="bullet">•</span>
+          <span>Contributors: <a href="https://github.com/0xaDanteees" target="_blank" rel="noopener noreferrer"><strong>0xaDanteees</strong></a></span>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

@@ -35,7 +35,14 @@ kill-partners:
 	@sleep 0.3
 	@lsof -ti:8300 | xargs -I{} kill -9 {} 2>/dev/null || true
 
-kill-svcs: kill-api kill-auth kill-partners
+kill-inventory:
+	@echo "[ops] killing Inventory service (by name + port 8400)"
+	@pkill -f "uvicorn .*services\.inventory\.app\.main:app" || true
+	@lsof -ti:8400 | xargs -I{} kill {} 2>/dev/null || true
+	@sleep 0.3
+	@lsof -ti:8400 | xargs -I{} kill -9 {} 2>/dev/null || true
+
+kill-svcs: kill-api kill-auth kill-partners kill-inventory
 	@echo "[ops] services killed"
 
 # -------- All-in-one --------
@@ -44,8 +51,34 @@ all-down: kill-svcs docker-down
 
 # -------- Diagnostics --------
 ps:
-	@echo "[ops] Listening on 8000/8200/8300 (if any):" \
+	@echo "[ops] Listening on 8000/8200/8300/8400 (if any):" \
 	  && (lsof -iTCP:8000 -sTCP:LISTEN || true) \
 	  && (lsof -iTCP:8200 -sTCP:LISTEN || true) \
-	  && (lsof -iTCP:8300 -sTCP:LISTEN || true)
+	  && (lsof -iTCP:8300 -sTCP:LISTEN || true) \
+	  && (lsof -iTCP:8400 -sTCP:LISTEN || true)
 	@echo "[ops] uvicorn processes:" && (ps aux | grep -E "uvicorn .*main:app" | grep -v grep || true)
+
+# -------- Testing --------
+# Run all tests across the monorepo (verbose)
+test-all:
+	@echo "[ops] running all tests (pytest -v)"
+	@python -m pytest -v
+
+# Run tests for a specific service (verbose)
+test-auth:
+	@echo "[ops] running Auth tests"
+	@python -m pytest services/auth/app/test_main.py -v
+
+test-partners:
+	@echo "[ops] running Partners tests"
+	@python -m pytest services/partners/app/test_main.py -v
+
+test-inventory:
+	@echo "[ops] running Inventory tests"
+	@python -m pytest services/inventory/app/test_main.py -v
+
+# Generic target: pass path with t=...
+# Example: make -f Makefile.ops test t=services/inventory/app/main_test.py::test_bundle_management_flow
+test:
+	@echo "[ops] running tests for $(t)"
+	@python -m pytest $(t) -v
