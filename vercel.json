@@ -18,33 +18,12 @@
         }
     ],
     "routes": [
-        {
-            "src": "/auth",
-            "dest": "/services/auth/app/main.py"
-        },
-        {
-            "src": "/auth/(.*)",
-            "dest": "/services/auth/app/main.py"
-        },
-        {
-            "src": "/partners",
-            "dest": "/services/partners/app/main.py"
-        },
-        {
-            "src": "/partners/(.*)",
-            "dest": "/services/partners/app/main.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/api/main.py"
-        },
-        {
-            "src": "/inventory",
-            "dest": "/services/inventory/app/main.py"
-        },
-        {
-            "src": "/inventory/(.*)",
-            "dest": "/services/inventory/app/main.py"
-        }
+        { "src": "/auth", "dest": "/services/auth/app/main.py" },
+        { "src": "/auth/(.*)", "dest": "/services/auth/app/main.py" },
+        { "src": "/partners", "dest": "/services/partners/app/main.py" },
+        { "src": "/partners/(.*)", "dest": "/services/partners/app/main.py" },
+        { "src": "/inventory", "dest": "/services/inventory/app/main.py" },
+        { "src": "/inventory/(.*)", "dest": "/services/inventory/app/main.py" },
+        { "src": "/(.*)", "dest": "/api/main.py" }
     ] 
 }
