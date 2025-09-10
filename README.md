@@ -220,6 +220,57 @@ Shared DB notes:
 - Partners references `auth.users` via FK. The Partners Alembic env includes a metadata-only shim for `users(id)` so FK resolution works during autogenerate, while filters prevent emitting any DDL for `users`.
 - Always run `make auth-up` first on a fresh DB so `users` exists before Partners adds FKs.
 
+## pgvector Setup (Vector Similarity Search)
+
+This project uses pgvector for vector similarity search capabilities. The setup is automated through Docker.
+
+### Prerequisites
+The docker-compose.yml is already configured to use the `pgvector/pgvector:pg16` image instead of the standard PostgreSQL image.
+
+### Setup Steps
+1. **Start the database with pgvector support:**
+   ```bash
+   docker-compose up
+   ```
+
+2. **Enable the pgvector extension** (one-time setup per database):
+   Connect to your PostgreSQL database via pgAdmin or psql and run:
+   ```sql
+   CREATE EXTENSION vector;
+   ```
+
+3. **Verify the installation:**
+   ```sql
+   SELECT * FROM pg_extension WHERE extname = 'vector';
+   ```
+   You should see version 0.8.1 or similar.
+
+### Quick Test
+To verify pgvector is working correctly:
+```sql
+-- Create a test table
+CREATE TABLE test_vectors (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    embedding vector(3)
+);
+
+-- Insert test data
+INSERT INTO test_vectors (name, embedding) VALUES 
+    ('test1', '[1,2,3]'),
+    ('test2', '[4,5,6]');
+
+-- Test similarity search
+SELECT name, embedding <-> '[2,2,2]' as distance 
+FROM test_vectors 
+ORDER BY embedding <-> '[2,2,2]';
+
+-- Clean up
+DROP TABLE test_vectors;
+```
+
+For more advanced usage, see the [pgvector documentation](https://github.com/pgvector/pgvector).
+
 ## Ops: stop Docker and microservices
 
 Quick utility makefile to shut down the local stack and any uvicorn processes.
