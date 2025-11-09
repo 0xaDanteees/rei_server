@@ -15,6 +15,8 @@ from .routers.clothing import router as clothing_router
 from .routers.accesories import router as accesories_router
 from .routers.presets import router as presets_router
 from .routers.personality import router as personality_router
+from .routers.avatars import router as avatars_router
+from .websocket import websocket_endpoint
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 
@@ -51,6 +53,12 @@ app.include_router(clothing_router, prefix="/clothing", tags=["clothing"])
 app.include_router(accesories_router, prefix="/accesories", tags=["accesories"])
 app.include_router(presets_router, prefix="/presets", tags=["presets"])
 app.include_router(personality_router, prefix="/partners/personality", tags=["personality"])
+app.include_router(avatars_router, prefix="/partners", tags=["avatars"])
+
+# WebSocket endpoint for avatar reactions
+@app.websocket("/partners/ws/{partner_id}")
+async def websocket_avatar_endpoint(websocket, partner_id: str):
+    await websocket_endpoint(websocket, partner_id)
 
 # Global error handlers to enforce {status, message, payload}
 @app.exception_handler(HTTPException)

@@ -5,7 +5,8 @@ This repository hosts multiple Python microservices (FastAPI-based) and an API g
 Version: 0.1.0
 
 ## Repository Structure
-```
+
+``` markdown
 .
 ├── api/
 │   └── main.py                  # Entry point for deployment status quick check
@@ -30,6 +31,7 @@ Version: 0.1.0
 ```
 
 ## Shared Conventions
+
 - **Language & Framework:** Python 3.9+, FastAPI
 - **Async DB:** SQLAlchemy 2 + asyncpg (PostgreSQL)
 - **Error Envelope:** Every response conforms to `{status, message, payload}`. Global exception handlers normalize HTTP errors and validation errors.
@@ -40,8 +42,10 @@ Version: 0.1.0
 - **Testing:** `pytest` with `fastapi.testclient.TestClient`.
 
 ## How to Create a New Microservice
+
 Use `services/auth` as a reference. A new service should mirror:
-```
+
+``` markdown
 services/<service_name>/
   ├── app/
   │   ├── main.py          # FastAPI app + exception handlers + router includes
@@ -57,7 +61,9 @@ services/<service_name>/
 ```
 
 ### Minimal FastAPI Skeleton (example)
+
 Create `services/foo/app/main.py`:
+
 ```python
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -76,7 +82,8 @@ async def health():
 ```
 
 Add `services/foo/requirements.txt` (example):
-```
+
+``` markdown
 fastapi
 uvicorn
 pydantic
@@ -95,9 +102,11 @@ pytest
 You can later add `db.py`, `models.py`, `schemas.py`, `routers/`, and `migrations/` as the service evolves.
 
 ## Deployment with Vercel (Python)
+
 The `vercel.json` is configured to deploy both `api/main.py` and `services/<service_name>/app/main.py`. Routes are split so that `/<service_name>/(.*)` goes to the `<service_name>` microservice, and everything else hits the `api` entry point.
 
 `vercel.json` (excerpt):
+
 ```json
 {
   "builds": [
@@ -112,86 +121,116 @@ The `vercel.json` is configured to deploy both `api/main.py` and `services/<serv
 ```
 
 Notes:
+
 - For an additional microservice (e.g., `foo`), add another build and route block, for example:
+
 ```json
 { "src": "services/foo/app/main.py", "use": "@vercel/python" }
 ```
+
 And route:
+
 ```json
 { "src": "/foo/(.*)", "dest": "/services/foo/app/main.py" }
 ```
+
 - This setup focuses on application startup; database connectivity for production should be configured via environment variables and secured secrets.
 
 ## Local Development Workflow
+
 - Create and isolate environments as needed (virtualenv/pyenv).
 - Install dependencies:
-```
+
+``` shell
 pip install -r requirements.txt
 ```
+
 - Start the API gateway:
-```
+
+``` shell
 uvicorn api.main:app --reload --port 8000
 ```
+
 - Start a microservice (e.g., auth):
-```
+
+``` shell
 uvicorn services.auth.app.main:app --reload --port 8200
 ```
+
 - Start a microservice (e.g., partners):
-```
+
+``` shell
 uvicorn services.partners.app.main:app --reload --port 8300
 ```
+
 - Start inventory service:
-```
+
+``` shell
 uvicorn services.inventory.app.main:app --reload --port 8400
 ```
-- Visit landing pages (local):
+
+- Start rag service:
+
+``` shell
+uvicorn services.rag.app.main:app --reload --port 8500
 ```
+
+- Visit landing pages (local):
+
+``` shell
 API Gateway: http://127.0.0.1:8000/
 Auth Service: http://127.0.0.1:8200/  (also at http://127.0.0.1:8200/auth)
 Partners Service: http://127.0.0.1:8300/  (also at http://127.0.0.1:8300/partners)
 Inventory Service: http://127.0.0.1:8400/  (also at http://127.0.0.1:8400/inventory)
+RAG Service: http://127.0.0.1:8500/  (also at http://127.0.0.1:8500/rag)
 ```
 
 - Swagger UIs (local):
-```
+
+``` shell
 API Gateway: http://127.0.0.1:8000/docs
 Auth Service: http://127.0.0.1:8200/auth/docs
 Partners Service: http://127.0.0.1:8300/partners/docs
 Inventory Service: http://127.0.0.1:8400/inventory/docs
+RAG Service: http://127.0.0.1:8500/rag/docs
 ```
 
 - Visit landing pages (production):
-```
+
+``` shell
 API Gateway: https://reicam-server.vercel.app/
 Auth Service: https://reicam-server.vercel.app/auth
 Partners Service: https://reicam-server.vercel.app/partners
+Inventory Service: https://reicam-server.vercel.app/inventory
+RAG Service: https://reicam-server.vercel.app/rag
 ```
 
 - Swagger UIs (production):
-```
+
+``` shell
 API Gateway: https://reicam-server.vercel.app/docs
 Auth Service: https://reicam-server.vercel.app/auth/docs
 Partners Service: https://reicam-server.vercel.app/partners/docs
+Inventory Service: https://reicam-server.vercel.app/inventory/docs
+RAG Service: https://reicam-server.vercel.app/rag/docs
 ```
-
 
 ## Testing
 
 We use `pytest` for all services. From the repo root:
 
-```
+``` shell
 # Run all tests across the monorepo
-python -m pytest -v services/<service_name>/app/main_test.py
+python -m pytest -v services/<service_name>/app/test_main.py
 
 # Run only the Inventory service tests
-python -m pytest services/<service_name>/app/main_test.py -v
+python -m pytest services/<service_name>/app/test_main.py -v
 
 # Run a single test (example)
-python -m pytest services/<service_name>/app/main_test.py::test_bundle_management_flow -v
+python -m pytest services/<service_name>/app/test_main.py::test_bundle_management_flow -v
 ```
 
-
-# Database and Migrations (per-service on a shared DB)
+## Database and Migrations (per-service on a shared DB)
 
 This repo runs Alembic per microservice, even when multiple services share the same Postgres database. Each service has:
 
@@ -201,7 +240,7 @@ This repo runs Alembic per microservice, even when multiple services share the s
 
 Use the provided Makefile targets to generate/apply revisions. From repo root:
 
-```
+``` makefile
 # Partners
 make partners-rev m="describe change"   # create a new revision from models
 make partners-up                         # upgrade to head
@@ -216,6 +255,7 @@ make auth-stamp
 ```
 
 Shared DB notes:
+
 - Set identical DB env vars (or POSTGRES_DSN) for all services so they point to the same database.
 - Partners references `auth.users` via FK. The Partners Alembic env includes a metadata-only shim for `users(id)` so FK resolution works during autogenerate, while filters prevent emitting any DDL for `users`.
 - Always run `make auth-up` first on a fresh DB so `users` exists before Partners adds FKs.
@@ -225,28 +265,36 @@ Shared DB notes:
 This project uses pgvector for vector similarity search capabilities. The setup is automated through Docker.
 
 ### Prerequisites
+
 The docker-compose.yml is already configured to use the `pgvector/pgvector:pg16` image instead of the standard PostgreSQL image.
 
 ### Setup Steps
+
 1. **Start the database with pgvector support:**
+
    ```bash
    docker-compose up
    ```
 
 2. **Enable the pgvector extension** (one-time setup per database):
    Connect to your PostgreSQL database via pgAdmin or psql and run:
+
    ```sql
    CREATE EXTENSION vector;
    ```
 
 3. **Verify the installation:**
+
    ```sql
    SELECT * FROM pg_extension WHERE extname = 'vector';
    ```
+
    You should see version 0.8.1 or similar.
 
 ### Quick Test
+
 To verify pgvector is working correctly:
+
 ```sql
 -- Create a test table
 CREATE TABLE test_vectors (
@@ -278,7 +326,8 @@ Quick utility makefile to shut down the local stack and any uvicorn processes.
 File: `Makefile.ops`
 
 Usage (run from repo root):
-```
+
+``` makefile
 # Stop everything: kill uvicorn (auth:8200, partners:8300) and docker compose down
 make -f Makefile.ops all-down
 
@@ -297,6 +346,7 @@ make -f Makefile.ops ps
 ```
 
 ## Best Practices
+
 - **Keep routers small** and focused by domain.
 - **Add global exception handlers** early to standardize error envelopes.
 - **Validate inputs** at the boundary with Pydantic and service-level validators.
@@ -306,6 +356,7 @@ make -f Makefile.ops ps
 - **Security:** rotate secrets, restrict CORS in production, consider rate limiting, and centralize auth concerns.
 
 ## Roadmap
-- Additional microservices (e.g., inventory, billing, rag, <waifu>) can follow the same scaffolding.
+
+- Additional microservices (e.g., inventory, billing, rag, waifu) can follow the same scaffolding.
 - Central API gateway can route to services and perform cross-cutting concerns.
 - Shared libraries (DTOs, middleware) can be extracted as internal packages if needed.
