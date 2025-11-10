@@ -8,7 +8,7 @@ from jose import jwt
 from passlib.context import CryptContext
 from .settings import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
@@ -42,6 +42,8 @@ def decode_token(token: str) -> Dict[str, Any]:
 def validate_password_strength(password: str) -> tuple[bool, str]:
     """Validate password policy: >=8 chars, at least one uppercase, one lowercase,
     one digit, and one special character. Returns (ok, message)."""
+    if len(password) > 128:
+        return False, "Password must be at most 128 characters long"
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
     if password.lower() == password:
