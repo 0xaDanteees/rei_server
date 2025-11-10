@@ -16,6 +16,23 @@ from .routers.bundles import router as bundles_router
 from .routers.purchases import router as purchases_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+import sentry_sdk
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn="https://REDACTED@o0.ingest.sentry.io/0",
+    send_default_pii=True,
+    enable_logs=True,
+    traces_sample_rate=1.0,
+    profile_session_sample_rate=1.0,
+    profile_lifecycle="trace",
+    environment="production",
+    release="inventory-service@0.1.0",
+)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -89,14 +106,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def startup():
+    logger.info("Inventory service starting up")
     await init_db()
+    logger.info("Inventory service started successfully")
 
 @app.on_event("shutdown")
 async def shutdown():
+    logger.info("Inventory service shutting down")
     await close_db()
 
 @app.get("/inventory/health")
 async def health():
+    logger.info("Inventory health check requested")
     db_status = "down"
     if is_db_enabled():
         try:
@@ -104,9 +125,17 @@ async def health():
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
             db_status = "up"
-        except Exception:
+            logger.info("Inventory service healthy - DB connected")
+        except Exception as e:
+            logger.error(f"Inventory service DB connection failed: {e}")
             db_status = "down"
     return {"status": "ok", "db": db_status}
+
+@app.get("/inventory/sentry-debug")
+async def trigger_error():
+    """Sentry debug endpoint - triggers an error for testing"""
+    logger.info("Inventory Sentry debug endpoint triggered")
+    division_by_zero = 1 / 0
 
 # Serve a simple landing page for Inventory at both "/" (local) and "/inventory" (Vercel)
 def _read_inventory_index() -> str:

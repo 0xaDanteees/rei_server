@@ -3,6 +3,29 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import httpx
+import sentry_sdk
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+sentry_sdk.init(
+    dsn="https://REDACTED@o0.ingest.sentry.io/0",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # Enable sending logs to Sentry
+    enable_logs=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profile_session_sample_rate to 1.0 to profile 100%
+    # of profile sessions.
+    profile_session_sample_rate=1.0,
+    # Set profile_lifecycle to "trace" to automatically
+    # run the profiler on when there is an active transaction
+    profile_lifecycle="trace",
+)
 
 app = FastAPI(
     title="API Gateway",
@@ -21,15 +44,24 @@ if assets_dir.exists():
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
+    logger.info("API Gateway root accessed")
     index_path = Path(__file__).parent / "index.html"
     try:
         return index_path.read_text(encoding="utf-8")
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load index.html: {e}")
         # Fallback minimal page if the file is not found in some environments
         return "<html><body><h1>Waifu Solutions Backend</h1><p>Landing page unavailable.</p></body></html>"
 
+@app.get("/sentry-debug")
+async def trigger_error():
+    """Sentry debug endpoint - triggers an error for testing"""
+    logger.info("Sentry debug endpoint triggered")
+    division_by_zero = 1 / 0
+
 @app.get("/api/health")
 async def health_check(request: Request):
+    logger.info("Health check requested")
     base = str(request.base_url).rstrip("/")
     results = {
         "api": {"status": "ok"},

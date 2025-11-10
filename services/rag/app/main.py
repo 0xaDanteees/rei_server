@@ -13,6 +13,23 @@ from .settings import settings
 from .routers import chat as chat_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+import sentry_sdk
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn="https://REDACTED@o0.ingest.sentry.io/0",
+    send_default_pii=True,
+    enable_logs=True,
+    traces_sample_rate=1.0,
+    profile_session_sample_rate=1.0,
+    profile_lifecycle="trace",
+    environment="production",
+    release="rag-service@0.1.0",
+)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -87,14 +104,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def startup():
+    logger.info("RAG service starting up")
     try:
         await init_db()
-    except Exception:
+        logger.info("RAG service started successfully")
+    except Exception as e:
+        logger.warning(f"RAG service started without DB: {e}")
         # DB may not be available in stateless Vercel environment
         pass
 
 @app.on_event("shutdown")
 async def shutdown():
+    logger.info("RAG service shutting down")
     try:
         await close_db()
     except Exception:
@@ -102,6 +123,7 @@ async def shutdown():
 
 @app.get("/rag/health")
 async def health():
+    logger.info("RAG health check requested")
     db_status = "down"
     if is_db_enabled():
         try:
@@ -109,9 +131,17 @@ async def health():
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
             db_status = "up"
-        except Exception:
+            logger.info("RAG service healthy - DB connected")
+        except Exception as e:
+            logger.error(f"RAG service DB connection failed: {e}")
             db_status = "down"
     return {"status": "ok", "db": db_status}
+
+@app.get("/rag/sentry-debug")
+async def trigger_error():
+    """Sentry debug endpoint - triggers an error for testing"""
+    logger.info("RAG Sentry debug endpoint triggered")
+    division_by_zero = 1 / 0
 
 # Serve a simple landing page for RAG at both "/" (local) and "/rag" (Vercel)
 def _read_rag_index() -> str:

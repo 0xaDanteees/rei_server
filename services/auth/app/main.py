@@ -14,6 +14,24 @@ from .routers.user import router as user_router
 from .routers.account import router as account_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+import sentry_sdk
+import logging
+from sqlalchemy import text
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn="https://REDACTED@o0.ingest.sentry.io/0",
+    send_default_pii=True,
+    enable_logs=True,
+    traces_sample_rate=1.0,
+    profile_session_sample_rate=1.0,
+    profile_lifecycle="trace",
+    environment="production",
+    release="auth-service@0.1.0",
+)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -80,14 +98,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def startup():
+    logger.info("Auth service starting up")
     await init_db()
+    logger.info("Auth service started successfully")
 
 @app.on_event("shutdown")
 async def shutdown():
+    logger.info("Auth service shutting down")
     await close_db()
 
 @app.get("/auth/health")
 async def health():
+    logger.info("Auth health check requested")
     db_status = "down"
     if is_db_enabled():
         try:
@@ -95,9 +117,17 @@ async def health():
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
             db_status = "up"
-        except Exception:
+            logger.info("Auth service healthy - DB connected")
+        except Exception as e:
+            logger.error(f"Auth service DB connection failed: {e}")
             db_status = "down"
     return {"status": "ok", "db": db_status}
+
+@app.get("/auth/sentry-debug")
+async def trigger_error():
+    """Sentry debug endpoint - triggers an error for testing"""
+    logger.info("Auth Sentry debug endpoint triggered")
+    division_by_zero = 1 / 0
 
 
 # Serve a simple landing page for Auth at both "/" (local) and "/auth" (Vercel)
