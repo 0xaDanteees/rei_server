@@ -32,7 +32,8 @@ async def me(
         # Base payload
         payload = MeOut.model_validate(current).model_dump()
         # Optionally include avatar URL if requested
-        if "avatar" in {i.lower() for i in include}:
+        lowered = {i.lower() for i in include}
+        if "avatar" in lowered:
             res = await db.execute(select(Avatar).where(Avatar.user_id == current.id).limit(1))
             avatar = res.scalars().first()
             if avatar:
@@ -44,6 +45,17 @@ async def me(
                         payload["avatar_url"] = "/user/avatar"
                 else:
                     payload["avatar_url"] = "/user/avatar"
+        # Optionally include timestamps if requested
+        if "createdat" in lowered and getattr(current, "created_at", None) is not None:
+            try:
+                payload["createdAt"] = current.created_at.isoformat()
+            except Exception:
+                pass
+        if "updatedat" in lowered and getattr(current, "updated_at", None) is not None:
+            try:
+                payload["updatedAt"] = current.updated_at.isoformat()
+            except Exception:
+                pass
         return {"status": status.HTTP_200_OK, "message": "OK", "payload": payload}
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get user")
