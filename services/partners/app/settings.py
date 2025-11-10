@@ -25,7 +25,11 @@ class Settings(BaseSettings):
     DB_NAME: Optional[str] = os.getenv("DB_NAME")
 
     # CORS
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: List[str] = [
+        "https://reicam-client.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
 
     # File uploads (skins, hairs, eyes, etc)
     # Use a repo-local default to avoid permission issues on host OS

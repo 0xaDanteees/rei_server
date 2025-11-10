@@ -25,7 +25,11 @@ class Settings(BaseSettings):
     DB_NAME: Optional[str] = os.getenv("DB_NAME")
 
     # CORS
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: List[str] = [
+        "https://reicam-client.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
 
     # File uploads (not used in inventory for now but
     # we might want to consider having similar to partners
