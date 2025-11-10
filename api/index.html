@@ -163,6 +163,31 @@
           })();
         </script>
       </div>
+
+      <div class="card">
+        <h2>RAG Service</h2>
+        <p class="muted">Agentic chat with memory, retrieval, and LLM integration.</p>
+        <ul>
+          <li><a data-svc="rag-docs" href="/rag/docs">Swagger UI</a></li>
+          <li><a data-svc="rag-openapi" href="/rag/openapi.json">OpenAPI JSON</a></li>
+          <li><a data-svc="rag-health" href="/rag/health">Health</a> <code>GET /rag/health</code></li>
+          <li><a data-svc="rag" href="/rag">RAG Service</a> <code>RAG Service</code></li>
+        </ul>
+        <script>
+          (function() {
+            const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+            const ragLinks = document.querySelectorAll('[data-svc^="rag"]');
+            ragLinks.forEach(link => {
+              if (isLocal) {
+                const href = link.getAttribute('href');
+                if (href.startsWith('/rag')) {
+                  link.href = 'http://127.0.0.1:8500' + href;
+                }
+              }
+            });
+          })();
+        </script>
+      </div>
     </section>
 
     <footer>
@@ -171,7 +196,7 @@
         <span class="bullet">•</span>
         <span>API Gateway</span>
         <span class="bullet">•</span>
-        <span>@V0.3.2</span>
+        <span>@V0.3.3</span>
         <span class="bullet">•</span>
         <span>Built with FastAPI</span>
         <span class="bullet">•</span>

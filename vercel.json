@@ -15,6 +15,10 @@
         {
             "src": "services/inventory/app/main.py",
             "use": "@vercel/python"
+        },
+        {
+            "src": "services/rag/app/main.py",
+            "use": "@vercel/python"
         }
     ],
     "routes": [
@@ -24,6 +28,8 @@
         { "src": "/partners/(.*)", "dest": "/services/partners/app/main.py" },
         { "src": "/inventory", "dest": "/services/inventory/app/main.py" },
         { "src": "/inventory/(.*)", "dest": "/services/inventory/app/main.py" },
+        { "src": "/rag", "dest": "/services/rag/app/main.py" },
+        { "src": "/rag/(.*)", "dest": "/services/rag/app/main.py" },
         { "src": "/(.*)", "dest": "/api/main.py" }
     ] 
 }

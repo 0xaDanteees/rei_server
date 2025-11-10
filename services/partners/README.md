@@ -7,6 +7,7 @@ This microservice provides partner (NPC) management APIs: CRUD on partners, clot
 Status: Production ready with comprehensive test coverage (7/7 tests passing).
 
 ## Key Features
+
 - Partner CRUD with ownership checks (JWT required)
 - Personality management with trait-based system and rarity mechanics
 - Clothing catalog + partner clothing (equip/unequip)
@@ -18,7 +19,8 @@ Status: Production ready with comprehensive test coverage (7/7 tests passing).
 - Alembic migrations (per-service) with isolation on shared DB
 
 ## Project Layout
-```
+
+``` markdown
 services/partners/
   ├── app/
   │   ├── main.py                # FastAPI app, global handlers, CORS, router includes
@@ -36,6 +38,7 @@ services/partners/
 ```
 
 ## Database Overview
+
 - `partners`
   - id (uuid, pk)
   - user_id (uuid, fk users.id, indexed, ondelete=CASCADE)
@@ -65,11 +68,13 @@ services/partners/
   - location, tattoo_type/style/color, size, image_url
 
 Relations:
+
 - A Partner belongs to a User (Auth service), via `user_id`.
 - Clothing, piercings, tattoos belong to a Partner.
 - Personality traits stored as JSONB with rarity-based generation.
 
 ## API Summary
+
 - `/partner` GET list, POST create
 - `/partner/{id}` GET one, PATCH update, DELETE delete
 - `/partner/search` GET filtered list
@@ -88,38 +93,50 @@ Relations:
 Responses follow the repo’s standard envelope `{status, message, payload}` via global handlers.
 
 ## Environment & Settings
+
 - Configure via `services/partners/app/settings.py` (e.g., `POSTGRES_DSN`, `JWT_SECRET`, CORS origins, directories).
 - Typical `.env` variables (example):
-```
+
+``` env
 POSTGRES_DSN=postgresql+asyncpg://user:pass@localhost:5432/db
 JWT_SECRET=supersecret
 CORS_ORIGINS=["*"]
 ```
 
 ## Local Development
+
 - Install dependencies:
-```
+
+``` shell
 pip install -r requirements.txt
 ```
+
 - Run migrations (shared DB best practice):
-```
+
+``` makefile
 {{ ... }}
 # Ensure Auth is at head first so `users` exists
 make auth-up
 # Partners migrations
 make partners-up
 ```
+
 - Start the service:
-```
+
+``` shell
 uvicorn services.partners.app.main:app --reload --port 8300
 ```
-- Visit: http://127.0.0.1:8300/docs for Swagger UI
+
+- Visit: <http://127.0.0.1:8300/docs> for Swagger UI
 
 ## Testing
+
 - Run tests:
-```
+
+``` shell
 pytest services/partners/app/main_test.py -v
 ```
+
 - Current status: 7/7 tests passing
 - Tests cover all routers and CRUD flows with comprehensive scenarios:
   - Health endpoint validation
@@ -131,12 +148,14 @@ pytest services/partners/app/main_test.py -v
 - Session-scoped fixtures for stable test execution
 
 ## Migrations Workflow (Shared DB, per-service isolation)
+
 - Partners Alembic env:
 {{ ... }}
   - Uses its own version table `alembic_version_partners`.
   - Includes a metadata-only dummy `users(id)` so Alembic can resolve the FK to Auth without generating DDL for `users`.
 - Makefile targets from repo root:
-```
+
+``` makefile
 make partners-rev m="describe change"   # autogenerate revision from models
 make partners-up                         # apply to head
 make partners-down                       # step back one revision
@@ -144,21 +163,26 @@ make partners-stamp                      # mark current schema as head
 ```
 
 ## Production (Vercel)
+
 - Deployed routes (assuming reicam-server.vercel.app):
-```
+
+``` shell
 Landing: https://reicam-server.vercel.app/partners
 Swagger: https://reicam-server.vercel.app/partners/docs
 OpenAPI: https://reicam-server.vercel.app/partners/openapi.json
 Health:  https://reicam-server.vercel.app/partners/health
 ```
 
-## Testing
+## Testing the service
+
 - Run all tests from repo root:
-```
+
+``` shell
 pytest -q
 ```
 
 ## Notes for Production
+
 - Tune DB pool in `db.get_engine()` (pool_size, max_overflow, timeouts) and consider PgBouncer.
 - Lock down CORS in production.
 - Add rate limiting and audit logging for sensitive operations.

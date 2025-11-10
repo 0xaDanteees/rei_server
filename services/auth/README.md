@@ -5,6 +5,7 @@ Version: 0.1.0
 This microservice provides user authentication and account management APIs, including registration, login/logout, password reset/change, profile and avatar management, and account state transitions (deactivate/reactivate/nuke). It is designed for a service-oriented backend and follows consistent response envelopes and error handling.
 
 ## Key Features
+
 - Soft delete support (is_nuked) with reusable email after nuke
 - Password policy enforcement (min length + complexity)
 - JWT access tokens with revocation table
@@ -14,7 +15,8 @@ This microservice provides user authentication and account management APIs, incl
 - Alembic migrations
 
 ## Project Layout
-```
+
+``` markdown
 services/auth/
   ├── app/
   │   ├── main.py                # FastAPI app init, global exception handlers, CORS, router includes
@@ -32,6 +34,7 @@ services/auth/
 ```
 
 ## Database (ERP-style summary)
+
 - `users`
   - id (uuid, pk)
   - email (varchar, case-insensitive uniqueness for NOT is_nuked via partial index)
@@ -60,10 +63,12 @@ services/auth/
   - consumed (bool)
 
 Relations:
+
 - One `User` has zero or one `Avatar` (1:1)
 - `RevokedToken` and `PasswordResetToken` link to `User` via `user_id`
 
 ## API Summary
+
 - `/auth/register` POST (201): Create a user. Enforces password policy and unique active email.
 - `/auth/login` POST (200): Returns JWT access token or 400 on invalid credentials.
 - `/auth/logout` POST (200): Revokes current token if provided; idempotent response otherwise.
@@ -79,20 +84,25 @@ Relations:
 Responses use envelope `{status, message, payload}` consistently. Errors are normalized by the global exception handlers in `app/main.py`.
 
 ## Password Policy
+
 Enforced in `security.validate_password_strength` and applied at:
+
 - `POST /auth/register` for new users.
 - `POST /auth/change-password` when changing passwords.
 
 Rules:
+
 - At least 8 characters
 - At least one uppercase, one lowercase, one digit, and one special character
 
 Existing users are not impacted until they change their password (only admin exists rn)
 
 ## Environment & Settings
+
 - Configure via `services/auth/app/settings.py` (e.g., `POSTGRES_DSN`, `JWT_SECRET`, CORS origins, avatar directory, size limits).
 - Typical `.env` variables (example):
-```
+
+``` shell
 POSTGRES_DSN=postgresql+asyncpg://user:pass@localhost:5432/db
 JWT_SECRET=supersecret
 CORS_ORIGINS=["*"] # TODO: change this after backend completion
@@ -101,20 +111,28 @@ MAX_AVATAR_MB=2 # TODO: change this after backend completion
 ```
 
 ## Local Development
+
 - Install dependencies:
-```
+
+``` shell
 pip install -r requirements.txt
 ```
+
 - Run migrations:
-```
+
+``` shell
 alembic -c services/auth/alembic.ini upgrade head
 ```
+
 - Start service locally:
-```
+
+``` shell
 uvicorn services.auth.app.main:app --reload --port 8200
 ```
+
 - Visit landing page and Swagger UI:
-```
+
+``` shell
 Landing: http://127.0.0.1:8200/ (also at http://127.0.0.1:8200/auth)
 Swagger: http://127.0.0.1:8200/auth/docs
 OpenAPI: http://127.0.0.1:8200/auth/openapi.json
@@ -124,7 +142,8 @@ Health:  http://127.0.0.1:8200/auth/health
 ## Production (Vercel)
 
 - Deployed routes (assuming reicam-server.vercel.app):
-```
+
+``` shell
 Landing: https://reicam-server.vercel.app/auth
 Swagger: https://reicam-server.vercel.app/auth/docs
 OpenAPI: https://reicam-server.vercel.app/auth/openapi.json
@@ -132,13 +151,17 @@ Health:  https://reicam-server.vercel.app/auth/health
 ```
 
 ## Testing
+
 - Run all tests from repo root:
-```
+
+``` shell
 pytest -q
 ```
+
 The test suite covers: registration, login/logout, forgot/reset-password, profile/avatar flows, account state actions, and change-password including password policy and should cover all the main functionality if anything is missing please let me know or add it :3
 
 ## Notes for Production
+
 - Deploy with multiple workers (e.g., gunicorn + uvicorn workers) and tune DB pool in `db.get_engine()` (pool_size, max_overflow, timeout, recycle).
 - Consider PgBouncer for connection pooling.
 - Store avatars in object storage (e.g., S3) and serve via CDN. Rumble we familiar with but is shit lol.

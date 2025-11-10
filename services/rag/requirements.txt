@@ -1,0 +1,22 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+sqlalchemy[asyncio]
+asyncpg
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+email-validator
+alembic
+httpx
+pytest
+
+# LLM & RAG
+langchain
+langchain-openai
+openai>=1.40.0
+tiktoken
+
+# Streaming (Server-Sent Events)
+sse-starlette
