@@ -6,7 +6,9 @@ sqlalchemy[asyncio]
 psycopg[binary,pool]
 certifi
 python-jose[cryptography]
-passlib[bcrypt]
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.1
+argon2-cffi>=21.3.0
 python-multipart
 email-validator
 alembic

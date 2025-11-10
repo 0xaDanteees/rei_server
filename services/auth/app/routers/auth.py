@@ -6,6 +6,7 @@ from fastapi import Body
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -31,9 +32,19 @@ async def register(request: Request, payload: RegisterIn = Body(...), db: AsyncS
         ok, msg = validate_password_strength(payload.password)
         if not ok:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
-        user = User(email=payload.email.lower(), password_hash=hash_password(payload.password))
+        try:
+            password_hash = hash_password(payload.password)
+        except ValueError:
+            # e.g., backend-specific constraints (bcrypt length) or other hashing errors
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password")
+        user = User(email=payload.email.lower(), password_hash=password_hash)
         db.add(user)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            # Handle race: unique constraint violated despite pre-check
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
         await db.refresh(user)
         payload_out = UserOut.model_validate(user).model_dump()
         return {"status": status.HTTP_201_CREATED, "message": "User created", "payload": payload_out}
