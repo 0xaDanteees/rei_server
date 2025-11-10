@@ -1,11 +1,14 @@
 # main.py from partners service
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from fastapi.responses import HTMLResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from sqlalchemy import text
 from .db import init_db, close_db, is_db_enabled, get_engine
@@ -45,6 +48,9 @@ sentry_sdk.init(
     debug=True,
 )
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"], headers_enabled=True)
+
 app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
@@ -53,6 +59,10 @@ app = FastAPI(
     openapi_url="/partners/openapi.json",
     swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}},
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Serve global assets (e.g., /assets/img/auth-waifu.jpg) and API static (for favicon) for local dev parity
 repo_root = Path(__file__).resolve().parents[3]
@@ -128,7 +138,8 @@ async def shutdown():
     await close_db()
 
 @app.get("/partners/health")
-async def health():
+@limiter.limit("200/minute")
+async def health(request: Request, response: Response):
     logger.info("Partners health check requested")
     db_status = "down"
     if is_db_enabled():

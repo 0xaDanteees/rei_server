@@ -4,10 +4,12 @@ from datetime import datetime, timedelta, timezone
 import secrets
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from ..dependencies import get_db, get_current_user
 from ..models import User, RevokedToken, PasswordResetToken
@@ -16,10 +18,12 @@ from ..security import hash_password, verify_password, create_access_token, deco
 
 router = APIRouter()
 bearer = HTTPBearer(auto_error=False)
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", status_code=201)
-async def register(payload: RegisterIn, db: AsyncSession = Depends(get_db)):
+@limiter.limit("5/minute")  # Strict limit for registration
+async def register(request: Request, payload: RegisterIn, db: AsyncSession = Depends(get_db)):
     try:
         res = await db.execute(select(User).where(User.email.ilike(payload.email), User.is_nuked == False).limit(1))  # noqa: E712
         if res.scalars().first():
@@ -41,7 +45,8 @@ async def register(payload: RegisterIn, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login")
-async def login(payload: LoginIn, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")  # Prevent brute force attacks
+async def login(request: Request, payload: LoginIn, db: AsyncSession = Depends(get_db)):
     try:
         res = await db.execute(select(User).where(User.email.ilike(payload.email), User.is_nuked == False).limit(1))  # noqa: E712
         user = res.scalars().first()
@@ -56,7 +61,9 @@ async def login(payload: LoginIn, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/logout")
+@limiter.limit("20/minute")
 async def logout(
+    request: Request,
     creds: Optional[HTTPAuthorizationCredentials] = Depends(bearer),
     db: AsyncSession = Depends(get_db),
 ):

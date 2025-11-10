@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -7,6 +7,9 @@ import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 import logging
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -37,6 +40,9 @@ sentry_sdk.init(
     debug=True,  # Enable debug mode to see Sentry logs in Vercel
 )
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"], headers_enabled=True)
+
 app = FastAPI(
     title="API Gateway",
     version="0.2.0",
@@ -44,6 +50,10 @@ app = FastAPI(
     redoc_url=None,
     openapi_url="/openapi.json",
     swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}})
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Note: Do NOT mount StaticFiles at "/api" or it will overshadow dynamic routes like /api/health on Vercel.
 
@@ -64,7 +74,8 @@ def read_root():
         return "<html><body><h1>Waifu Solutions Backend</h1><p>Landing page unavailable.</p></body></html>"
 
 @app.get("/sentry-debug")
-async def trigger_error():
+@limiter.limit("5/minute")  # Strict limit for debug endpoint
+async def trigger_error(request: Request):
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("Sentry debug endpoint triggered")
     
@@ -77,7 +88,8 @@ async def trigger_error():
         raise  # Re-raise so FastAPI returns 500
 
 @app.get("/api/health")
-async def health_check(request: Request):
+@limiter.limit("200/minute")  # Higher limit for health checks
+async def health_check(request: Request, response: Response):
     logger.info("Health check requested")
     base = str(request.base_url).rstrip("/")
     results = {

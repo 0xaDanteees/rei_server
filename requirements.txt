@@ -15,6 +15,9 @@ pytest
 # Monitoring and logging
 sentry-sdk[fastapi]
 
+# Rate limiting
+slowapi
+
 # RAG service dependencies
 langchain
 langchain-openai
