@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     DB_NAME: Optional[str] = os.getenv("DB_NAME")
 
     # CORS
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: List[str] = ["https://reicam-client.vercel.app", "http://localhost:3000", "http://localhost:5173"]
 
     # LLM provider configuration
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")  # "openai" or "azure"
