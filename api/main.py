@@ -44,6 +44,14 @@ sentry_sdk.init(
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"], headers_enabled=True)
 
+app = FastAPI(
+    title="API Gateway",
+    version="0.2.0",
+    docs_url="/docs",
+    redoc_url=None,
+    openapi_url="/openapi.json",
+    swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}})
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -56,14 +64,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],  # o lista explícita: ["Authorization", "Content-Type", "Accept"]
 )
-
-app = FastAPI(
-    title="API Gateway",
-    version="0.2.0",
-    docs_url="/docs",
-    redoc_url=None,
-    openapi_url="/openapi.json",
-    swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}})
 
 # Add rate limiter to app state
 app.state.limiter = limiter
