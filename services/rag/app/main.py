@@ -24,13 +24,17 @@ app = FastAPI(
 )
 
 # Serve global assets (e.g., /assets/img/auth-waifu.jpg) and API static (for favicon) for local dev parity
-repo_root = Path(__file__).resolve().parents[3]
-assets_dir = (repo_root / "assets").resolve()
-api_dir = (repo_root / "api").resolve()
-if assets_dir.exists():
-    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets-static")
-if api_dir.exists():
-    app.mount("/api", StaticFiles(directory=api_dir), name="api-static")
+try:
+    repo_root = Path(__file__).resolve().parents[3]
+    assets_dir = (repo_root / "assets").resolve()
+    api_dir = (repo_root / "api").resolve()
+    if assets_dir.exists() and assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets-static")
+    if api_dir.exists() and api_dir.is_dir():
+        app.mount("/api", StaticFiles(directory=str(api_dir)), name="api-static")
+except Exception:
+    # Vercel deployment may not have these directories
+    pass
 
 # CORS
 app.add_middleware(
@@ -83,11 +87,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def startup():
-    await init_db()
+    try:
+        await init_db()
+    except Exception:
+        # DB may not be available in stateless Vercel environment
+        pass
 
 @app.on_event("shutdown")
 async def shutdown():
-    await close_db()
+    try:
+        await close_db()
+    except Exception:
+        pass
 
 @app.get("/rag/health")
 async def health():

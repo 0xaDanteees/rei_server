@@ -11,3 +11,10 @@ email-validator
 alembic
 httpx
 pytest
+
+# RAG service dependencies
+langchain
+langchain-openai
+openai>=1.40.0
+tiktoken
+sse-starlette
