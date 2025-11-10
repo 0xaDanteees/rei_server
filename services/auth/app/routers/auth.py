@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 from datetime import datetime, timedelta, timezone
 import secrets
 from typing import Optional
+from fastapi import Body
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -23,7 +22,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.post("/register", status_code=201)
 @limiter.limit("5/minute")  # Strict limit for registration
-async def register(request: Request, payload: RegisterIn, db: AsyncSession = Depends(get_db)):
+async def register(request: Request, payload: RegisterIn = Body(...), db: AsyncSession = Depends(get_db)):
     try:
         res = await db.execute(select(User).where(User.email.ilike(payload.email), User.is_nuked == False).limit(1))  # noqa: E712
         if res.scalars().first():
@@ -46,7 +45,7 @@ async def register(request: Request, payload: RegisterIn, db: AsyncSession = Dep
 
 @router.post("/login")
 @limiter.limit("10/minute")  # Prevent brute force attacks
-async def login(request: Request, payload: LoginIn, db: AsyncSession = Depends(get_db)):
+async def login(request: Request, payload: LoginIn = Body(...), db: AsyncSession = Depends(get_db)):
     try:
         res = await db.execute(select(User).where(User.email.ilike(payload.email), User.is_nuked == False).limit(1))  # noqa: E712
         user = res.scalars().first()
@@ -88,7 +87,7 @@ async def logout(
 
 
 @router.post("/forgot-password", status_code=202)
-async def forgot_password(payload: ForgotPasswordIn, db: AsyncSession = Depends(get_db)):
+async def forgot_password(payload: ForgotPasswordIn = Body(...), db: AsyncSession = Depends(get_db)):
     try:
         res = await db.execute(select(User).where(User.email.ilike(payload.email), User.is_nuked == False).limit(1))  # noqa: E712
         user = res.scalars().first()
@@ -111,7 +110,7 @@ async def forgot_password(payload: ForgotPasswordIn, db: AsyncSession = Depends(
 
 
 @router.post("/reset-password")
-async def reset_password(payload: ResetPasswordIn, db: AsyncSession = Depends(get_db)):
+async def reset_password(payload: ResetPasswordIn = Body(...), db: AsyncSession = Depends(get_db)):
     try:
         res = await db.execute(
             select(PasswordResetToken).where(
@@ -137,7 +136,7 @@ async def reset_password(payload: ResetPasswordIn, db: AsyncSession = Depends(ge
 
 @router.post("/change-password")
 async def change_password(
-    payload: ChangePasswordIn,
+    payload: ChangePasswordIn = Body(...),
     current: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
