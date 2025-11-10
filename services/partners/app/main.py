@@ -20,6 +20,8 @@ from .websocket import websocket_endpoint
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 import logging
 
 # Configure logging
@@ -35,6 +37,10 @@ sentry_sdk.init(
     profile_lifecycle="trace",
     environment="production",
     release="partners-service@0.1.0",
+    integrations=[
+        FastApiIntegration(),
+        StarletteIntegration(),
+    ],
 )
 
 app = FastAPI(
@@ -139,7 +145,7 @@ async def health():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("Partners Sentry debug endpoint triggered")
-    division_by_zero = 1 / 0
+    raise Exception("Sentry test error from Partners Service")
 
 # Serve a simple landing page for Partners at both "/" (local) and "/partners" (Vercel)
 def _read_partners_index() -> str:

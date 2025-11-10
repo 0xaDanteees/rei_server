@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import httpx
 import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 import logging
 
 # Configure logging
@@ -25,6 +27,11 @@ sentry_sdk.init(
     # Set profile_lifecycle to "trace" to automatically
     # run the profiler on when there is an active transaction
     profile_lifecycle="trace",
+    # Explicitly enable FastAPI and Starlette integrations
+    integrations=[
+        FastApiIntegration(),
+        StarletteIntegration(),
+    ],
 )
 
 app = FastAPI(
@@ -57,7 +64,7 @@ def read_root():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("Sentry debug endpoint triggered")
-    division_by_zero = 1 / 0
+    raise Exception("Sentry test error from API Gateway")
 
 @app.get("/api/health")
 async def health_check(request: Request):

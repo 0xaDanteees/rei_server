@@ -17,6 +17,8 @@ from .routers.purchases import router as purchases_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 import logging
 
 # Configure logging
@@ -32,6 +34,10 @@ sentry_sdk.init(
     profile_lifecycle="trace",
     environment="production",
     release="inventory-service@0.1.0",
+    integrations=[
+        FastApiIntegration(),
+        StarletteIntegration(),
+    ],
 )
 
 app = FastAPI(
@@ -135,7 +141,7 @@ async def health():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("Inventory Sentry debug endpoint triggered")
-    division_by_zero = 1 / 0
+    raise Exception("Sentry test error from Inventory Service")
 
 # Serve a simple landing page for Inventory at both "/" (local) and "/inventory" (Vercel)
 def _read_inventory_index() -> str:

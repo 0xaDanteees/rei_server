@@ -14,6 +14,8 @@ from .routers import chat as chat_router
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 import logging
 
 # Configure logging
@@ -29,6 +31,10 @@ sentry_sdk.init(
     profile_lifecycle="trace",
     environment="production",
     release="rag-service@0.1.0",
+    integrations=[
+        FastApiIntegration(),
+        StarletteIntegration(),
+    ],
 )
 
 app = FastAPI(
@@ -141,7 +147,7 @@ async def health():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("RAG Sentry debug endpoint triggered")
-    division_by_zero = 1 / 0
+    raise Exception("Sentry test error from RAG Service")
 
 # Serve a simple landing page for RAG at both "/" (local) and "/rag" (Vercel)
 def _read_rag_index() -> str:
