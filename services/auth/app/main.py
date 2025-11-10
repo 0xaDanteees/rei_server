@@ -37,6 +37,8 @@ sentry_sdk.init(
         FastApiIntegration(),
         StarletteIntegration(),
     ],
+    shutdown_timeout=2,
+    debug=True,
 )
 
 app = FastAPI(
@@ -133,7 +135,14 @@ async def health():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("Auth Sentry debug endpoint triggered")
-    raise Exception("Sentry test error from Auth Service")
+    
+    # Capture exception explicitly and flush
+    try:
+        raise Exception("Sentry test error from Auth Service")
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sentry_sdk.flush(timeout=2.0)
+        raise
 
 
 # Serve a simple landing page for Auth at both "/" (local) and "/auth" (Vercel)

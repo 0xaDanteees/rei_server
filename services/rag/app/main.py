@@ -35,6 +35,8 @@ sentry_sdk.init(
         FastApiIntegration(),
         StarletteIntegration(),
     ],
+    shutdown_timeout=2,
+    debug=True,
 )
 
 app = FastAPI(
@@ -147,7 +149,14 @@ async def health():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("RAG Sentry debug endpoint triggered")
-    raise Exception("Sentry test error from RAG Service")
+    
+    # Capture exception explicitly and flush
+    try:
+        raise Exception("Sentry test error from RAG Service")
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sentry_sdk.flush(timeout=2.0)
+        raise
 
 # Serve a simple landing page for RAG at both "/" (local) and "/rag" (Vercel)
 def _read_rag_index() -> str:

@@ -32,6 +32,9 @@ sentry_sdk.init(
         FastApiIntegration(),
         StarletteIntegration(),
     ],
+    # Important for serverless: ensure events are sent before function terminates
+    shutdown_timeout=2,  # Wait up to 2 seconds on shutdown
+    debug=True,  # Enable debug mode to see Sentry logs in Vercel
 )
 
 app = FastAPI(
@@ -64,7 +67,14 @@ def read_root():
 async def trigger_error():
     """Sentry debug endpoint - triggers an error for testing"""
     logger.info("Sentry debug endpoint triggered")
-    raise Exception("Sentry test error from API Gateway")
+    
+    # Capture exception explicitly and flush
+    try:
+        raise Exception("Sentry test error from API Gateway")
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        sentry_sdk.flush(timeout=2.0)  # Wait up to 2 seconds for events to send
+        raise  # Re-raise so FastAPI returns 500
 
 @app.get("/api/health")
 async def health_check(request: Request):
