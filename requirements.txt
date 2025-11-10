@@ -3,7 +3,8 @@ uvicorn
 pydantic
 pydantic-settings
 sqlalchemy[asyncio]
-asyncpg
+psycopg[binary,pool]
+certifi
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
@@ -24,3 +25,6 @@ langchain-openai
 openai>=1.40.0
 tiktoken
 sse-starlette
+
+# Supabase
+supabase

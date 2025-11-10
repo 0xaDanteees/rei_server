@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     JWT_ISSUER: Optional[str] = None  # issuer check optional across services
 
     # Database (prefer POSTGRES_DSN, else compose from DB_* env vars)
-    POSTGRES_DSN: Optional[str] = None
+    POSTGRES_DSN: Optional[str] = os.getenv("POSTGRES_DSN")
     # Optional so vercel doesnt break
     DB_USER: Optional[str] = os.getenv("DB_USER")
     DB_PASSWORD: Optional[str] = os.getenv("DB_PASSWORD")

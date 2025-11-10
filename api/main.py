@@ -101,13 +101,25 @@ async def health_check(request: Request, response: Response):
     }
 
     async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
-        # Try same-deployment relative URLs first (Vercel)
-        endpoints = {
-            "auth": f"{base}/auth/health",
-            "partners": f"{base}/partners/health",
-            "inventory": f"{base}/inventory/health",
-            "rag": f"{base}/rag/health",
-        }
+        # Check if running locally (development)
+        is_local = "localhost" in base or "127.0.0.1" in base
+        
+        if is_local:
+            # Local development: use separate ports
+            endpoints = {
+                "auth": "http://127.0.0.1:8200/auth/health",
+                "partners": "http://127.0.0.1:8300/partners/health",
+                "inventory": "http://127.0.0.1:8400/inventory/health",
+                "rag": "http://127.0.0.1:8500/rag/health",
+            }
+        else:
+            # Production (Vercel): use same-deployment relative URLs
+            endpoints = {
+                "auth": f"{base}/auth/health",
+                "partners": f"{base}/partners/health",
+                "inventory": f"{base}/inventory/health",
+                "rag": f"{base}/rag/health",
+            }
 
         for svc, url in endpoints.items():
             try:
@@ -118,26 +130,7 @@ async def health_check(request: Request, response: Response):
                 else:
                     results[svc] = {"status": "down", "code": r.status_code}
             except Exception as e:
-                # Local dev fallback to ports if host is localhost/127.0.0.1
-                host = request.client.host if request.client else "127.0.0.1"
-                if host in ("127.0.0.1", "localhost"):
-                    fallback = {
-                        "auth": "http://127.0.0.1:8200/auth/health",
-                        "partners": "http://127.0.0.1:8300/partners/health",
-                        "inventory": "http://127.0.0.1:8400/inventory/health",
-                        "rag": "http://127.0.0.1:8500/rag/health",
-                    }
-                    try:
-                        r2 = await client.get(fallback[svc])
-                        if r2.status_code == 200:
-                            data2 = r2.json()
-                            results[svc] = {"status": "ok", **({"db": data2.get("db")} if isinstance(data2, dict) else {})}
-                        else:
-                            results[svc] = {"status": "down", "code": r2.status_code}
-                    except Exception as e2:
-                        results[svc] = {"status": "down", "error": str(e2)}
-                else:
-                    results[svc] = {"status": "down", "error": str(e)}
+                results[svc] = {"status": "down", "error": str(e)}
 
     return results
 

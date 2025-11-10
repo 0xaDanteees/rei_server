@@ -3,6 +3,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import text, Table
 from fastapi import HTTPException, status
 from .settings import settings
+import ssl
+import certifi
 
 Base = declarative_base()
 
@@ -14,20 +16,24 @@ _SessionLocal: Optional[sessionmaker] = None
 def is_db_enabled() -> bool:
     return bool(settings.POSTGRES_DSN)
 
+ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+ssl_ctx.check_hostname = False
+ssl_ctx.verify_mode = ssl.CERT_NONE
 
 def get_engine() -> AsyncEngine:
     global _engine
     if _engine is None:
         if not is_db_enabled():
             raise RuntimeError("Database is disabled (no POSTGRES_DSN).")
+        
+        # For Supabase pgBouncer with psycopg: simpler config
         _engine = create_async_engine(
             settings.POSTGRES_DSN,
             pool_pre_ping=True,
-            pool_size=10,
-            max_overflow=20,
+            pool_size=5,
+            max_overflow=10,
             echo=False,
-            pool_timeout=30,
-            pool_recycle=1800,
+            connect_args={"sslmode": "require"},
         )
     return _engine
 

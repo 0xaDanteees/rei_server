@@ -20,3 +20,7 @@ tiktoken
 
 # Streaming (Server-Sent Events)
 sse-starlette
+
+# Database
+psycopg2-binary
+supabase

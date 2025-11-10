@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 import os
+from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_SECONDS: int = 60 * 60 * 24 * 7  # 7d
 
     # Database (prefer POSTGRES_DSN, else compose from DB_* env vars)
-    POSTGRES_DSN: Optional[str] = None
+    POSTGRES_DSN: Optional[str] = os.getenv("POSTGRES_DSN")
     # Optional so vercel doesnt break
     DB_USER: Optional[str] = os.getenv("DB_USER")
     DB_PASSWORD: Optional[str] = os.getenv("DB_PASSWORD")
@@ -32,7 +33,9 @@ class Settings(BaseSettings):
     MAX_AVATAR_MB: int = 5
 
     class Config:
-        env_file = ".env"
+        # Load .env from repo root (reicam_server/.env)
+        # Path: services/auth/app/settings.py -> parents[3] = reicam_server
+        env_file = str(Path(__file__).resolve().parents[3] / ".env")
         case_sensitive = True
         extra = "ignore"  # Ignore extra fields from shared .env
 

@@ -11,3 +11,7 @@ email-validator
 alembic
 httpx
 pytest
+
+# Database
+psycopg2-binary
+supabase
