@@ -46,7 +46,7 @@ settings = Settings()
 if not settings.POSTGRES_DSN:
     if all([settings.DB_USER, settings.DB_PASSWORD, settings.DB_HOST, settings.DB_PORT, settings.DB_NAME]):
         settings.POSTGRES_DSN = (
-            f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+            f"postgresql+psycopg_async://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
         )
     else:
         # leave as None to allow stateless mode (no DB on Vercel)

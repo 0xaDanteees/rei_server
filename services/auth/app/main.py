@@ -60,6 +60,36 @@ app = FastAPI(
     swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}},
 )
 
+# Resilient OpenAPI generation to avoid 500s in serverless environments
+from fastapi.openapi.utils import get_openapi
+
+_openapi_cache = None
+
+def custom_openapi():
+    global _openapi_cache
+    if _openapi_cache:
+        return _openapi_cache
+    try:
+        schema = get_openapi(
+            title=settings.APP_NAME,
+            version="0.1.0",
+            routes=app.routes,
+        )
+        _openapi_cache = schema
+        return schema
+    except Exception as e:
+        # Log but don't crash the docs route
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_exception(e)
+            sentry_sdk.flush(timeout=1.5)
+        except Exception:
+            pass
+        logger.error(f"OpenAPI generation failed: {e}", exc_info=True)
+        return {"openapi": "3.0.0", "info": {"title": settings.APP_NAME, "version": "0.1.0"}, "paths": {}}
+
+app.openapi = custom_openapi
+
 # Add rate limiter to app state
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
