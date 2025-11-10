@@ -10,6 +10,7 @@ import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -42,6 +43,19 @@ sentry_sdk.init(
 
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"], headers_enabled=True)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://reicam-client.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],  # o lista explícita: ["Authorization", "Content-Type", "Accept"]
+)
 
 app = FastAPI(
     title="API Gateway",
