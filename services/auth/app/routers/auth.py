@@ -62,7 +62,7 @@ async def login(request: Request, payload: LoginIn = Body(...), db: AsyncSession
         user = res.scalars().first()
         if not user or not user.is_active or not verify_password(payload.password, user.password_hash):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials")
-        token, jti, exp = create_access_token(sub=user.email)
+        token, jti, exp = create_access_token(sub=str(user.id))
         return {"status": status.HTTP_200_OK, "message": "Logged in", "payload": {"access_token": token, "token_type": "bearer", "expires_in": exp}}
     except HTTPException:
         raise

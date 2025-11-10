@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional
+from uuid import UUID
 from datetime import datetime, timezone
 
 from fastapi import Depends, HTTPException
@@ -43,7 +44,13 @@ async def get_current_user(
     if revoked.scalars().first():
         raise HTTPException(status_code=401, detail="Token revoked")
 
-    res = await db.execute(select(User).where(User.email.ilike(sub)).limit(1))
+    # Resolve user by UUID from token subject
+    try:
+        user_id = UUID(sub)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    res = await db.execute(select(User).where(User.id == user_id).limit(1))
     user = res.scalars().first()
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="Inactive or missing user")
@@ -71,7 +78,12 @@ async def get_current_user_allow_inactive(
     if revoked.scalars().first():
         raise HTTPException(status_code=401, detail="Token revoked")
 
-    res = await db.execute(select(User).where(User.email.ilike(sub)).limit(1))
+    try:
+        user_id = UUID(sub)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+
+    res = await db.execute(select(User).where(User.id == user_id).limit(1))
     user = res.scalars().first()
     if not user:
         raise HTTPException(status_code=401, detail="Inactive or missing user")
